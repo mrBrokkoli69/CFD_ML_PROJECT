@@ -2,7 +2,7 @@
 *.o
 
 # Исполняемые файлы
-mask_editor
+/mask_editor
 *.exe
 *.out
 

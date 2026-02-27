@@ -15,7 +15,15 @@ struct Mask {
     }
 }
 
-
+	bool isSolid(int x, int y) const {
+		if (((x<0) || (x> WIDTH)) || ((y<0) || (y > HEIGHT)) ) {
+			return true;
+		}
+		else {
+			return cells[y][x];
+		}
+	
+	}
 
 };
 

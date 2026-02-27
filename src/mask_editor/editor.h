@@ -34,6 +34,6 @@ struct Mask {
 
 };
 
-
+void drawMask(const Mask& mask, int cursorX, int cursorY);
 
 #endif

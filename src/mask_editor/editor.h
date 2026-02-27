@@ -16,7 +16,7 @@ struct Mask {
 }
 
 	bool isSolid(int x, int y) const {
-		if (((x<0) || (x> WIDTH)) || ((y<0) || (y > HEIGHT)) ) {
+		if (((x<0) || (x>= WIDTH)) || ((y<0) || (y >= HEIGHT)) ) {
 			return true;
 		}
 		else {
@@ -24,6 +24,13 @@ struct Mask {
 		}
 	
 	}
+
+	void setSolid(int x, int y, bool solid) {
+ 	   if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        	cells[y][x] = solid;
+   		 }
+	}
+
 
 };
 

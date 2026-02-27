@@ -1,6 +1,15 @@
 #include <ncurses.h>
+#include "editor.h"
+
 
 int main() {
+	Mask mask;
+	mask.setSolid(10,5,true);
+	if (mask.isSolid(10,5)) {}
+	mask.setSolid(10,5,false);	
+
+
+
 	initscr();
 	raw();
 	keypad(stdscr, TRUE);

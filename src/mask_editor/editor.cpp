@@ -19,12 +19,14 @@ void drawMask(const Mask& mask, int cursorY, int cursorX) {
 
 int main() {
 	Mask mask;
-
 	initscr();
+	mouseinterval(0);
 	raw();
 	keypad(stdscr, TRUE);
 	noecho();
-	
+
+	mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+
 	int cursorX = mask.WIDTH / 2 ;
 	int cursorY = mask.HEIGHT / 2 ;
 
@@ -74,10 +76,30 @@ int main() {
 			case ' ':
 				mask.setSolid(cursorY, cursorX, !(mask.isSolid(cursorY, cursorX)));
 				break;
-		}
+			case KEY_MOUSE:
+			{
+   				 MEVENT event;
+   				 if (getmouse(&event) == OK) {
+          			 	   int maskX = event.x - 1;  // отступ слева
+   					   int maskY = event.y - 1;  // отступ сверху
+       					    
+     					   // Проверяем, что координаты внутри маски
+       					 if (maskX >= 0 && maskX < mask.WIDTH && 
+         				   maskY >= 0 && maskY < mask.HEIGHT) {
+					 	if(event.bstate & (BUTTON1_CLICKED | BUTTON1_PRESSED)) {
+							mask.setSolid(cursorY, cursorX, true);
+						}
+						else if(event.bstate & (BUTTON3_CLICKED | BUTTON3_PRESSED)) 	{
+							mask.setSolid(cursorY, cursorX, false);
+						}				
+                                
+     		   }
+ 		   }
+ 			   break;
+			}
+		 }
 
 	}
-
 	endwin();
 	return 0;	
 }

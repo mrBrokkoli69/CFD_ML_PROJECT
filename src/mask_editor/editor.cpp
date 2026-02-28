@@ -1,10 +1,10 @@
 #include <ncurses.h>
 #include "editor.h"
 
-void drawMask(const Mask& mask, int cursorX, int cursorY) {
+void drawMask(const Mask& mask, int cursorY, int cursorX) {
 	 for (int y = 0; y < mask.HEIGHT; y++) {
        	 for (int x = 0; x < mask.WIDTH; x++) {
-		if (mask.isSolid(x,y)) {
+		if (mask.isSolid(y,x)) {
 			mvaddch(y+1,x+1,'#');
 		}
 		else {
@@ -33,7 +33,7 @@ int main() {
 	int ch;
 	while((true))
         {
-		drawMask(mask, cursorX, cursorY);
+		drawMask(mask, cursorY, cursorX);
 		
 		move(mask.HEIGHT + 2, 0) ;	
 		printw("Mask editor v1.0\n");
@@ -71,7 +71,9 @@ int main() {
 			case 'd':
 				if(cursorX < mask.WIDTH - 1) cursorX++;
 				break;
-
+			case ' ':
+				mask.setSolid(cursorY, cursorX, !(mask.isSolid(cursorY, cursorX)));
+				break;
 		}
 
 	}

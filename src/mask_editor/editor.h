@@ -15,7 +15,7 @@ struct Mask {
     }
 }
 
-	bool isSolid(int x, int y) const {
+	bool isSolid(int y, int x) const {
 		if (((x<0) || (x>= WIDTH)) || ((y<0) || (y >= HEIGHT)) ) {
 			return true;
 		}
@@ -25,7 +25,7 @@ struct Mask {
 	
 	}
 
-	void setSolid(int x, int y, bool solid) {
+	void setSolid(int y, int x, bool solid) {
  	   if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
         	cells[y][x] = solid;
    		 }
@@ -34,6 +34,6 @@ struct Mask {
 
 };
 
-void drawMask(const Mask& mask, int cursorX, int cursorY);
+void drawMask(const Mask& mask, int cursorY, int cursorX);
 
 #endif

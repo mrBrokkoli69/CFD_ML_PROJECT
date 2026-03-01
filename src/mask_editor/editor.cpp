@@ -2,7 +2,7 @@
 #include "editor.h"
 #include "shape_generator.h"
 #include "flood_fill.h"
-
+#include "file_io.h"
 
 
 
@@ -43,7 +43,7 @@ int main() {
 		move(mask.HEIGHT + 2, 0) ;	
 		printw("Mask editor v1.0\n");
 		printw("Press q to quit\n");
-		printw("f - flood fill | c - clear all");
+		printw("f - flood fill | c - clear all| p - save mask | l - load mask ");
 		refresh();
 		
 
@@ -98,7 +98,8 @@ int main() {
                                 
      		   					}
  		   					}
- 			   break;}
+ 			 		  break;
+			}
 			
 			case 'f':{
    			 // Определяем, что заливаем: целевое значение = текущее под курсором
@@ -114,9 +115,18 @@ int main() {
 				clearMask(mask);
 				break;
 			
-		 }
+		 
+			case 'p':
+				saveMask(mask,"mask.dat");
+				mvprintw(mask.HEIGHT +5 ,0,"Mask saved to mask.dat");
+				break;
+			case 'l':
+				loadMask(mask,"mask.dat");
+				mvprintw(mask.HEIGHT +5 ,0,"Mask loaded from mask.dat");
+				break;
 
-	}
+		}
+		}
 	endwin();
 	return 0;	
 }

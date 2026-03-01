@@ -12,5 +12,5 @@ void drawEllipse(Mask& mask, int cx, int cy, int rx, int ry);
 
 void drawNACA0012(Mask& mask, int cx, int cy, int chord);
 
-
+void drawNACA2412(Mask& mask, int cx, int cy, int chord);
 #endif

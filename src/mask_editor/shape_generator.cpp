@@ -170,3 +170,59 @@ void drawNACA0012(Mask& mask, int cx, int cy, int chord) {
         }
     }
 }
+
+
+void drawNACA2412(Mask& mask, int cx, int cy, int chord) {
+    // Параметры NACA 2412
+    double m = 0.02;  // максимальная кривизна (2%)
+    double p = 0.4;   // положение макс. кривизны (40% от носка)
+    double t = 0.12;  // максимальная толщина (12%)
+    
+    for (int x = 0; x <= chord; x++) {
+        // Нормализованная координата от 0 до 1
+        double xn = (double)x / chord;
+        
+        // 1. Толщина (та же, что у NACA 0012)
+        double yt = (t/0.2) * (0.2969 * sqrt(xn) 
+                              - 0.1260 * xn 
+                              - 0.3516 * xn * xn 
+                              + 0.2843 * xn * xn * xn 
+                              - 0.1015 * xn * xn * xn * xn);
+        
+        // 2. Средняя линия (кривизна)
+        double yc;
+        double dyc_dx;  // производная для угла наклона
+        
+        if (xn <= p) {
+            // Передняя часть (до точки макс. кривизны)
+            yc = (m / (p * p)) * (2 * p * xn - xn * xn);
+            dyc_dx = (2 * m / (p * p)) * (p - xn);
+        } else {
+            // Задняя часть (после точки макс. кривизны)
+            yc = (m / ((1 - p) * (1 - p))) * ((1 - 2 * p) + 2 * p * xn - xn * xn);
+            dyc_dx = (2 * m / ((1 - p) * (1 - p))) * (p - xn);
+        }
+        
+        // 3. Угол наклона средней линии
+        double theta = atan(dyc_dx);
+        
+        // 4. Координаты верхней и нижней поверхности
+        int xPos = cx + x;
+        
+        // Верхняя поверхность
+        int yUpper = cy - (int)(yc * chord) - (int)(yt * chord * cos(theta));
+        // Нижняя поверхность
+        int yLower = cy - (int)(yc * chord) + (int)(yt * chord * cos(theta));
+        
+        // Рисуем вертикальную линию между верхней и нижней поверхностями
+        if (xPos >= 0 && xPos < mask.WIDTH) {
+            for (int y = yUpper; y <= yLower; y++) {
+                if (y >= 0 && y < mask.HEIGHT) {
+                    mask.setSolid(y, xPos, true);
+                }
+            }
+        }
+    }
+}
+
+

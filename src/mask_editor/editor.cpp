@@ -30,9 +30,7 @@ int main() {
 
 	int cursorX = mask.WIDTH / 2 ;
 	int cursorY = mask.HEIGHT / 2 ;
-
-
-
+	
 	int ch;
 	while((true))
         {

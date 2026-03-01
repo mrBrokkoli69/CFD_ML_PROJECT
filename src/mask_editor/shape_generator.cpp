@@ -1,8 +1,5 @@
 #include "shape_generator.h"
-
-
-#include "shape_generator.h"
-
+#include <math.h>
 
 void drawCircle(Mask& mask, int cx, int cy, int r) {
     int x = 0;
@@ -56,9 +53,120 @@ void drawCircle(Mask& mask, int cx, int cy, int r) {
 }
 
 void drawRectangle(Mask& mask, int x1, int y1, int x2, int y2) {
-    // пока пусто
+    // Упорядочиваем координаты (чтобы x1 <= x2, y1 <= y2)
+    if (x1 > x2) {
+        int temp = x1;
+        x1 = x2;
+        x2 = temp;
+    }
+    if (y1 > y2) {
+        int temp = y1;
+        y1 = y2;
+        y2 = temp;
+    }
+    
+    // Проходим по всем Y и X внутри прямоугольника
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
+            mask.setSolid(y, x, true);  // порядок (y, x) как в Mask
+        }
+    }
 }
 
 void drawEllipse(Mask& mask, int cx, int cy, int rx, int ry) {
-    // пока пусто
+    int x = 0;
+    int y = ry;
+    
+    // Начальные параметры решения для первой части
+    long long rx2 = (long long)rx * rx;
+    long long ry2 = (long long)ry * ry;
+    long long twoRx2 = 2 * rx2;
+    long long twoRy2 = 2 * ry2;
+    
+    long long p;
+    long long px = 0;
+    long long py = twoRx2 * y;
+    
+    // Часть 1: наклон < 1
+    p = (long long)(ry2 - rx2 * ry + (0.25 * rx2));
+    while (px < py) {
+        // Рисуем 4 симметричные точки
+        if (cy + y >= 0 && cy + y < mask.HEIGHT && cx + x >= 0 && cx + x < mask.WIDTH)
+            mask.setSolid(cy + y, cx + x, true);
+        if (cy + y >= 0 && cy + y < mask.HEIGHT && cx - x >= 0 && cx - x < mask.WIDTH)
+            mask.setSolid(cy + y, cx - x, true);
+        if (cy - y >= 0 && cy - y < mask.HEIGHT && cx + x >= 0 && cx + x < mask.WIDTH)
+            mask.setSolid(cy - y, cx + x, true);
+        if (cy - y >= 0 && cy - y < mask.HEIGHT && cx - x >= 0 && cx - x < mask.WIDTH)
+            mask.setSolid(cy - y, cx - x, true);
+        
+        x++;
+        px += twoRy2;
+        
+        if (p < 0) {
+            p += ry2 + px;
+        } else {
+            y--;
+            py -= twoRx2;
+            p += ry2 + px - py;
+        }
+    }
+    
+    // Часть 2: наклон > 1
+    p = (long long)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
+    while (y >= 0) {
+        // Рисуем 4 симметричные точки
+        if (cy + y >= 0 && cy + y < mask.HEIGHT && cx + x >= 0 && cx + x < mask.WIDTH)
+            mask.setSolid(cy + y, cx + x, true);
+        if (cy + y >= 0 && cy + y < mask.HEIGHT && cx - x >= 0 && cx - x < mask.WIDTH)
+            mask.setSolid(cy + y, cx - x, true);
+        if (cy - y >= 0 && cy - y < mask.HEIGHT && cx + x >= 0 && cx + x < mask.WIDTH)
+            mask.setSolid(cy - y, cx + x, true);
+        if (cy - y >= 0 && cy - y < mask.HEIGHT && cx - x >= 0 && cx - x < mask.WIDTH)
+            mask.setSolid(cy - y, cx - x, true);
+        
+        y--;
+        py -= twoRx2;
+        
+        if (p > 0) {
+            p += rx2 - py;
+        } else {
+            x++;
+            px += twoRy2;
+            p += rx2 - py + px;
+        }
+    }
+}
+
+
+
+void drawNACA0012(Mask& mask, int cx, int cy, int chord) {
+    // chord — длина хорды в пикселях (сколько точек по X)
+    for (int x = 0; x <= chord; x++) {
+        // Нормализованная координата от 0 до 1
+        double xn = (double)x / chord;
+
+        // Формула толщины для NACA 0012
+        // t = 0.12 (12% толщины)
+        double yt = 0.6 * (0.2969 * sqrt(xn)
+                         - 0.1260 * xn
+                         - 0.3516 * xn * xn
+                         + 0.2843 * xn * xn * xn
+                         - 0.1015 * xn * xn * xn * xn);
+
+        // Переводим толщину в пиксели
+        int thickness = (int)(yt * chord);
+
+        // Верхняя и нижняя поверхности
+        int yUpper = cy - thickness;
+        int yLower = cy + thickness;
+
+        // Рисуем вертикальную линию в этой точке хорды
+        for (int y = yUpper; y <= yLower; y++) {
+            if (x + cx >= 0 && x + cx < mask.WIDTH &&
+                y >= 0 && y < mask.HEIGHT) {
+                mask.setSolid(y, x + cx, true);
+            }
+        }
+    }
 }

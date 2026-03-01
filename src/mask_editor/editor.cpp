@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include "editor.h"
+#include "shape_generator.h"
 
 void drawMask(const Mask& mask, int cursorY, int cursorX) {
 	 for (int y = 0; y < mask.HEIGHT; y++) {
@@ -36,7 +37,7 @@ int main() {
 	while((true))
         {
 		drawMask(mask, cursorY, cursorX);
-		
+	
 		move(mask.HEIGHT + 2, 0) ;	
 		printw("Mask editor v1.0\n");
 		printw("Press q to quit");

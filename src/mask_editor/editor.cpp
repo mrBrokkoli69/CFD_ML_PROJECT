@@ -1,6 +1,10 @@
 #include <ncurses.h>
 #include "editor.h"
 #include "shape_generator.h"
+#include "flood_fill.h"
+
+
+
 
 void drawMask(const Mask& mask, int cursorY, int cursorX) {
 	 for (int y = 0; y < mask.HEIGHT; y++) {
@@ -38,7 +42,8 @@ int main() {
 	
 		move(mask.HEIGHT + 2, 0) ;	
 		printw("Mask editor v1.0\n");
-		printw("Press q to quit");
+		printw("Press q to quit\n");
+		printw("f - flood fill | c - clear all");
 		refresh();
 		
 
@@ -78,10 +83,9 @@ int main() {
 			case KEY_MOUSE:
 			{
    				 MEVENT event;
-   				 if (getmouse(&event) == OK) {
-          			 	   int maskX = event.x - 1;  // отступ слева
-   					   int maskY = event.y - 1;  // отступ сверху
-       					    
+   				 if (getmouse(&event) == OK) { 
+					int maskX = cursorX -1;
+					int maskY = cursorY - 1;					
      					   // Проверяем, что координаты внутри маски
        					 if (maskX >= 0 && maskX < mask.WIDTH && 
          				   maskY >= 0 && maskY < mask.HEIGHT) {
@@ -92,10 +96,24 @@ int main() {
 							mask.setSolid(cursorY, cursorX, false);
 						}				
                                 
-     		   }
- 		   }
- 			   break;
-			}
+     		   					}
+ 		   					}
+ 			   break;}
+			
+			case 'f':{
+   			 // Определяем, что заливаем: целевое значение = текущее под курсором
+    			bool targetValue = mask.isSolid(cursorY, cursorX);
+  			  // Новое значение — противоположное
+   			 bool newValue = !targetValue;
+    
+   			 // Вызываем заливку, начиная с позиции курсора
+  			  floodFill(mask, cursorY, cursorX, targetValue, newValue);
+  			  break;}
+
+			case 'c':
+				clearMask(mask);
+				break;
+			
 		 }
 
 	}

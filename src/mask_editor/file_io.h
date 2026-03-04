@@ -5,9 +5,9 @@
 #include "editor.h"
 
 
-void saveMask(const Mask& mask, const std::string& filename);
+std::string saveMask(const Mask& mask); 
 void loadMask(Mask& mask, const std::string& filename);
-
+std::string getNextMaskFilename();
 
 
 

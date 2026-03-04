@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -g3
+CXXFLAGS = -Wall -Wextra -g3 -std=c++17
 TARGET = mask_editor
 SRCDIR = src/mask_editor
 SRCS = $(SRCDIR)/editor.cpp $(SRCDIR)/flood_fill.cpp $(SRCDIR)/file_io.cpp $(SRCDIR)/shape_generator.cpp 

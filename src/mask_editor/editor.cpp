@@ -139,11 +139,16 @@ int main() {
 				 clearMask(mask);
 				 break;
 
-
 			case 'p':
-				 saveMask(mask,"mask.dat");
-				 mvprintw(mask.HEIGHT +5 ,0,"Mask saved to mask.dat");
-				 break;
+				 {
+					 std::string filename = saveMask(mask);
+					 if (!filename.empty()) {
+						 mvprintw(mask.HEIGHT + 5, 0, "Saved to %s", filename.c_str());
+					 } else {
+						 mvprintw(mask.HEIGHT + 5, 0, "Save failed!");
+					 }
+					 break;
+				 }
 			case 'l':
 				 loadMask(mask,"mask.dat");
 				 mvprintw(mask.HEIGHT +5 ,0,"Mask loaded from mask.dat");

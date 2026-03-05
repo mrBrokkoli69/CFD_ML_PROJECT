@@ -149,10 +149,63 @@ int main() {
 					 }
 					 break;
 				 }
-			case 'l':
-				 loadMask(mask,"mask.dat");
-				 mvprintw(mask.HEIGHT +5 ,0,"Mask loaded from mask.dat");
+			case 'l': 
+				 {
+				 std::vector<std::string> masks = getMaskList();
+				 if(masks.empty()) {
+					 mvprintw(mask.HEIGHT + 5,0,"No saved masks");
+					 break;
+				 }
+
+				 for(int i = 0; i < 10; i++) {
+					 move(mask.HEIGHT+ 6 + i ,0);
+					 clrtoeol();
+
+				 }
+
+				 move(mask.HEIGHT + 6, 0);
+				 printw("=== Available masks ===");
+
+				 // Выводим до 10 масок
+				 int count = 0;
+				 for (const auto& name : masks) {
+					 if (count >= 10) break;
+
+					 move(mask.HEIGHT + 7 + count, 0);
+					 printw("%d: %s", count + 1, name.c_str());
+					 count++;
+				 }
+
+				 // Подсказка
+				 move(mask.HEIGHT + 17, 0);
+				 printw("Enter number (1-%d) or 0 to cancel: ", count);
+				 refresh();
+
+				 echo();
+
+				 char input[16];
+
+				 move(mask.HEIGHT + 17,35);
+				 clrtoeol();
+				 getstr(input);
+
+				 int choice = atoi(input);
+
+				 if(choice <=0 || choice > count ) {
+					 mvprintw(mask.HEIGHT + 5, 0 ,"Error");
+					 break;
+				 }
+				 // Выбранный файл (индекс в векторе = choice - 1)
+				 std::string filename = "data/masks/" + masks[choice - 1];
+
+				 // Загружаем маску
+				 loadMask(mask, filename);
+
+				 // Подтверждение
+				 mvprintw(mask.HEIGHT + 5, 0, "Loaded: %s", masks[choice - 1].c_str());
+
 				 break;
+					}
 			case 'R':  // заглавная R (Shift+r)
 				 {
 					 int x1 = inputInt("Rectangle x1");

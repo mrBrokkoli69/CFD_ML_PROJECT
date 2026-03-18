@@ -83,19 +83,78 @@ void collision(LBMField& field, double tau) {
 
 				field.f[i][y][x] = fi - (1.0 / tau ) * (fi - feq[i]);
 
+			}
+		}
+	}
+}
+
+void streaming(LBMField& field) {
+	int nx = field.nx;
+	int ny = field.ny;
+
+	std::vector<std::vector<std::vector<double>>> f_temp = field.f;
+
+	for(int i = 0; i < Q; i++) {
+		for(int y = 0 ; y < ny; y++) {
+			for(int x = 0; x < nx; x++) {
+				field.f[i][y][x] = 0;
 
 
 			}
-
-
 		}
+
+	}
+
+	for(int i = 0; i < Q; i++) {
+		for(int y = 0 ; y < ny; y++) {
+			for(int x = 0; x < nx; x++) {
+				int nx_next = x + cx[i];
+				int ny_next = y + cy[i];
+
+				if(nx_next >= 0 && nx_next < nx && ny_next >=0 && ny_next < ny) {
+					field.f[i][ny_next][nx_next] += f_temp[i][y][x];
+
+
+
+				} 
+
+
+			}
+		}
+
+
+
 
 
 	}
 
-
-
 }
+
+
+void initField(LBMField& field, double rho0, double ux0, double uy0) {
+	int nx = field.nx;
+	int ny = field.ny;
+
+	double feq[Q];
+
+	equilibrium(feq , rho0, ux0, uy0);
+
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			for (int i = 0; i < Q; i++) {
+				field.f[i][y][x] = feq[i];
+			}
+			field.rho[y][x] = rho0;
+			field.ux[y][x] = ux0;
+			field.uy[y][x] = uy0;
+		}
+	}
+}
+
+
+
+
+
 
 
 

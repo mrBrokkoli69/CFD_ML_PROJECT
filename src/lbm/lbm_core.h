@@ -69,5 +69,9 @@ void equilibrium(double feq[Q], double rho, double ux, double uy);
 
 void collision(LBMField& field, double tau);
 
+void streaming(LBMField& field);
+
+void initField(LBMField& field, double rho0, double ux0, double uy0);
+
 
 #endif

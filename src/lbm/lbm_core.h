@@ -33,7 +33,7 @@ static const int cy[Q] = {
 	-1
 };
 
-static const int w[Q] = {
+static const double w[Q] = {
 	4.0/9.0,
 	1.0/9.0,
 	1.0/9.0,
@@ -53,16 +53,21 @@ struct LBMField {
 	int ny;
 
 	std::vector<std::vector<std::vector<double>>> f; //f[i][y][x] -- трехмерный массив функции распределения по каждому направлению в узлах
-	
+
 	std::vector<std::vector<double>> rho;
 	std::vector<std::vector<double>> ux;
 	std::vector<std::vector<double>> uy;
-	
+
 	LBMField(int ny, int nx);
-	
+
 
 };
 
+void computeMacroscopic(LBMField& field);
+
+void equilibrium(double feq[Q], double rho, double ux, double uy);
+
+void collision(LBMField& field, double tau);
 
 
 #endif

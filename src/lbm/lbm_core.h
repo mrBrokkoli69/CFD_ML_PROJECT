@@ -79,10 +79,17 @@ void applyOutflowRight(LBMField& field); //гран условие справа
 
 void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
 
-void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>> mask); //bounce back для маски
+void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask); //bounce back для маски
 
-std::pair<double, double> computeForces ( LBMField& field , const std::vector<std::vector<bool>>& mask);
+std::pair<double, double> computeForce ( LBMField& field , std::vector<std::vector<bool>>& mask); //вычисление сил у поверхности твердого тела
 
-void writeVTK(const LBMField& field, int step);
+void writeVTK(const LBMField& field, int step); //функция записи результатов в файл для визуализации в OpenFoam
+
+void loadMaskToLBM( LBMField& field, const std::vector<std::vector<bool>>& mask) ; //функция связи маски с LBM-сеткой
+
+
+
+
+
 
 #endif

@@ -1,7 +1,8 @@
 #include "lbm_core.h"
-#include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
+#include <iostream>
 
 LBMField::LBMField(int nx_ , int ny_) : nx(nx_), ny(ny_) {
 	f.resize(Q);
@@ -36,7 +37,7 @@ void computeMacroscopic(LBMField& field)
 				uy += field.f[k][i][j] * cy[k];
 			}
 			field.rho[i][j] = rho;
-			if(rho >= 1e-12) {
+			if(rho >= 0.2) {
 				field.ux[i][j] = ux / rho;
 				field.uy[i][j] = uy / rho;
 			}
@@ -152,7 +153,7 @@ void initField(LBMField& field, double rho0, double ux0, double uy0) {
 	}
 }
 
-void applyZoeHeLeft(LBMField& field, double u_in) {
+void applyZouHeLeft(LBMField& field, double u_in) {
 	int nx = field.nx;
 	int ny = field.ny;
 	int x = 0 ;
@@ -234,7 +235,7 @@ void applyBounceBack(LBMField& field) {
 
 }
 
-void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>>& mask) {
+void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask) {
     int nx = field.nx;
     int ny = field.ny;
     
@@ -265,7 +266,7 @@ void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>>& 
 }
 }
 
-std::pair<double, double> computeForce(LBMField& field, const std::vector<std::vector<bool>>& mask) {
+std::pair<double, double> computeForce(LBMField& field, std::vector<std::vector<bool>>& mask) {
     int nx = field.nx;
     int ny = field.ny;
     
@@ -300,7 +301,7 @@ std::pair<double, double> computeForce(LBMField& field, const std::vector<std::v
 	    
 	    }
 	}}
-    return {Fy, Fx};
+    return {Fx, Fy};
 }
 
 void writeVTK(const LBMField& field, int step) {
@@ -348,6 +349,36 @@ void writeVTK(const LBMField& field, int step) {
     }
     
     file.close();
+}
+
+
+void loadMaskToLBM( LBMField& field, const std::vector<std::vector<bool>>& mask) {
+	int nx = field.nx;
+	int ny = field.ny;
+
+	for ( int y = 0; y < ny; y++ ) {
+		for ( int x = 0; x < nx; x++) {
+			if (mask[y][x]) {
+				for ( int i = 0 ; i < Q ; i++) {
+					field.f[i][y][x] = 0;
+				}
+				field.rho[y][x] = 0;
+				field.ux[y][x] = 0;
+				field.uy[y][x] = 0;
+			
+			
+			}
+		
+		
+		
+		}
+	
+	
+	
+	}
+
+
+
 }
 	
 

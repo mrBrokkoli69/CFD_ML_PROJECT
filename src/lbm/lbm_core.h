@@ -75,11 +75,10 @@ void initField(LBMField& field, double rho0, double ux0, double uy0); // ини�
 
 void applyZouHeLeft(LBMField& field, double u_in);  //гран условие слева
 
-void applyOutflowRight(LBMField& field);
+void applyOutflowRight(LBMField& field); //гран условие справа
 
+void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
 
-
-
-
+void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>> mask); //bounce back для маски
 
 #endif

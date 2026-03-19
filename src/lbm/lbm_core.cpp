@@ -202,4 +202,68 @@ void applyOutflowRight(LBMField& field) {
 
 }
 
+void applyBounceBack(LBMField& field) {
+	int nx = field.nx;
+	int ny = field.ny;
+	
+	const int opposite[Q] = {0,3,4,1,2,7,8,5,6};
+
+
+	for(int y = 0; y < ny; y++) {
+		for(int x = 0; x < nx; x++) {
+			for( int i = 0 ; i < Q; i++) {
+				int nx_next = x + cx[i];
+				int ny_next = y + cy[i];
+				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny) {
+					int opp = opposite[i];
+					field.f[opp][y][x] = field.f[i][y][x];
+				
+				}
+			
+			
+			}
+		
+		
+		}
+
+	
+	}
+
+
+
+}
+
+void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>>& mask) {
+    int nx = field.nx;
+    int ny = field.ny;
+    
+    const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+    
+    for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+		if(mask[y][x]) continue;
+		
+		for(int i = 0; i < Q; i++) {
+			int nx_next = x + cx[i];
+			int ny_next = y + cy[i];
+
+			if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
+                    		continue;
+			if(mask[ny_next][nx_next]) {
+				int opp = opposite[i];
+				field.f[opp][y][x] = field.f[i][y][x];
+					
+					}
+		
+		
+		}
+
+
+
+}
+}
+}
+
+
+
 

@@ -63,15 +63,23 @@ struct LBMField {
 
 };
 
-void computeMacroscopic(LBMField& field);
+void computeMacroscopic(LBMField& field); //выч макроскопиических вариантов
 
-void equilibrium(double feq[Q], double rho, double ux, double uy);
+void equilibrium(double feq[Q], double rho, double ux, double uy); // определение равновесной функции распределения
 
-void collision(LBMField& field, double tau);
+void collision(LBMField& field, double tau); //столкновение
 
-void streaming(LBMField& field);
+void streaming(LBMField& field); //перенос
 
-void initField(LBMField& field, double rho0, double ux0, double uy0);
+void initField(LBMField& field, double rho0, double ux0, double uy0); // инициализация поля начальными данными 
+
+void applyZouHeLeft(LBMField& field, double u_in);  //гран условие слева
+
+void applyOutflowRight(LBMField& field);
+
+
+
+
 
 
 #endif

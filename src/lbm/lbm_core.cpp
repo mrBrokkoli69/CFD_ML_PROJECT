@@ -151,10 +151,55 @@ void initField(LBMField& field, double rho0, double ux0, double uy0) {
 	}
 }
 
+void applyZoeHeLeft(LBMField& field, double u_in) {
+	int nx = field.nx;
+	int ny = field.ny;
+	int x = 0 ;
+
+	for(int y = 0 ; y < ny; y++) {
+		double f0 = field.f[0][y][x];
+		double f2 = field.f[2][y][x];
+		double f3 = field.f[3][y][x];
+		double f4 = field.f[4][y][x];
+		double f6 = field.f[6][y][x];
+		double f7 = field.f[7][y][x];
+
+		double rho = (f0 + f2 + f4 + 2 * ( f3 + f6 + f7)) / (1-u_in) ;
+
+		double f1 = f3 + (2.0/3.0) * rho * u_in;
+		double f5 = f7 - 0.5 * (f2-f4) + (1.0/6.0) * rho * u_in;
+		double f8 = f6 + 0.5 * (f2 - f4) + (1.0/6.0) * rho * u_in;
+        	
+		
+		field.f[1][y][x] = f1;
+        	field.f[5][y][x] = f5;
+        	field.f[8][y][x] = f8;
+
+		field.rho[y][x] = rho;
+        	field.ux[y][x] = u_in;
+        	field.uy[y][x] = 0.0; 
+	}
+}
+
+void applyOutflowRight(LBMField& field) {
+	int nx = field.nx;
+	int ny = field.ny;
+	int x = nx - 1;
+	for ( int y = 0 ; y<ny; y++) {
+		field.f[3][y][x] = field.f[3][y][x -1] ; 
+        	field.f[6][y][x] = field.f[6][y][x-1];
+        	field.f[7][y][x] = field.f[7][y][x-1];
+
+                field.rho[y][x] = field.rho[y][x-1];
+                field.ux[y][x] = field.ux[y][x-1];
+                field.uy[y][x] = field.uy[y][x-1];	
+
+	
+	
+	}
 
 
 
-
-
+}
 
 

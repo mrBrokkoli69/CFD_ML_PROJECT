@@ -1,6 +1,7 @@
 #include "lbm_core.h"
 #include <iostream>
-
+#include <fstream>
+#include <iomanip>
 
 LBMField::LBMField(int nx_ , int ny_) : nx(nx_), ny(ny_) {
 	f.resize(Q);
@@ -264,6 +265,90 @@ void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>>& 
 }
 }
 
+std::pair<double, double> computeForce(LBMField& field, const std::vector<std::vector<bool>>& mask) {
+    int nx = field.nx;
+    int ny = field.ny;
+    
+    double Fx = 0.0;
+    double Fy = 0.0;
+    
+    // Таблица противоположных направлений
+    const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+    
+    for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+            // Если текущая ячейка твёрдая — пропускаем
+            if (mask[y][x]) continue;
+		
 
+	    for(int i = 0; i < Q; i++) {
+	    	int nx_next = x + cx[i];
+		int ny_next = y + cy[i];
+
+		if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
+                    continue;
+
+		if(mask[ny_next][nx_next]) {
+			double fi = field.f[i][y][x];
+
+			Fx += fi * cx[i];
+			Fy += fi * cy[i];
+		
+		
+		}
+
+	    
+	    }
+	}}
+    return {Fy, Fx};
+}
+
+void writeVTK(const LBMField& field, int step) {
+    int nx = field.nx;
+    int ny = field.ny;
+    
+    // Формируем имя файла: flow_0001.vtk, flow_0002.vtk и т.д.
+    std::ostringstream filename;
+    filename << "flow_" << std::setw(4) << std::setfill('0') << step << ".vtk";
+    
+    std::ofstream file(filename.str());
+    if (!file.is_open()) {
+        std::cerr << "Cannot open file " << filename.str() << " for writing!" << std::endl;
+        return;
+    }
+    
+    // Заголовок VTK-файла
+    file << "# vtk DataFile Version 3.0\n";
+    file << "LBM simulation at step " << step << "\n";
+    file << "ASCII\n";
+    file << "DATASET STRUCTURED_POINTS\n";
+    file << "DIMENSIONS " << nx << " " << ny << " 1\n";
+    file << "ORIGIN 0 0 0\n";
+    file << "SPACING 1 1 1\n";
+    
+    // Данные по точкам
+    file << "POINT_DATA " << nx * ny << "\n";
+    
+    // Поле плотности (скаляр)
+    file << "SCALARS density float\n";
+    file << "LOOKUP_TABLE default\n";
+    for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+            file << field.rho[y][x] << " ";
+        }
+        file << "\n";
+    }
+    
+    // Поле скорости (вектор)
+    file << "VECTORS velocity float\n";
+    for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+            file << field.ux[y][x] << " " << field.uy[y][x] << " 0.0\n";
+        }
+    }
+    
+    file.close();
+}
+	
 
 

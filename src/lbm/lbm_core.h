@@ -4,7 +4,7 @@
 
 #include <cmath>
 #include <vector>
-
+#include <utility>
 
 static const int D = 2;
 static const int Q = 9;
@@ -80,5 +80,9 @@ void applyOutflowRight(LBMField& field); //гран условие справа
 void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
 
 void applyBounceBackMask(LBMField& field, const std::vector<std::vector<bool>> mask); //bounce back для маски
+
+std::pair<double, double> computeForces ( LBMField& field , const std::vector<std::vector<bool>>& mask);
+
+void writeVTK(const LBMField& field, int step);
 
 #endif

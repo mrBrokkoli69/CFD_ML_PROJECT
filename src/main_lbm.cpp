@@ -54,7 +54,7 @@ int main() {
 	loadMaskToLBM(field, mask);
 
 	// Временной цикл
-	const int maxSteps = 800;
+	const int maxSteps = 300;
 	const int vtkInterval = 10;
 
 	std::cout << "Starting LBM simulation..." << std::endl;
@@ -63,7 +63,7 @@ int main() {
 
 	for (int step = 0; step < maxSteps; step++) {
 		// Вычисляем макроскопические величины
-		computeMacroscopic(field);
+		computeMacroscopic(field, mask);
 
 		// Выполняем столкновение
 		collision(field, tau);
@@ -71,6 +71,8 @@ int main() {
 		// Перенос
 		streaming(field);
 
+		applyBounceBack(field);
+	
 		// Граничные условия
 		applyZouHeLeft(field, u_in);           // вход слева
 		applyOutflowRight(field);               // выход справа

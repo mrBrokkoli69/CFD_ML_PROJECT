@@ -45,8 +45,8 @@ static const double w[Q] = {
 	1.0/36.0
 };
 
-static const int CS2 = 1.0/3.0;
-static const int CS = std::sqrt(CS2);
+static const double CS2 = 1.0/3.0;
+static const double CS = std::sqrt(CS2);
 
 struct LBMField {
 	int nx;
@@ -58,12 +58,12 @@ struct LBMField {
 	std::vector<std::vector<double>> ux;
 	std::vector<std::vector<double>> uy;
 
-	LBMField(int ny, int nx);
+	LBMField(int nx, int ny);
 
 
 };
 
-void computeMacroscopic(LBMField& field); //выч макроскопиических вариантов
+void computeMacroscopic(LBMField& field, const std::vector<std::vector<bool>>& mask); //выч макроскопиических вариантов
 
 void equilibrium(double feq[Q], double rho, double ux, double uy); // определение равновесной функции распределения
 

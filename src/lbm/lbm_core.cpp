@@ -4,30 +4,38 @@
 #include <sstream>
 #include <iostream>
 
-LBMField::LBMField(int nx_ , int ny_) : nx(nx_), ny(ny_) {
-	f.resize(Q);
+LBMField::LBMField(int nx_, int ny_) : nx(nx_), ny(ny_) {
+    f.resize(Q);
 
-	for(int i = 0 ; i < Q; i ++) {
-		f[i].resize(ny);
-		for (int j = 0; j < ny; j++) {
-			f[i][j].resize(nx, 0.0);
-		}
-	}
-	rho.resize(ny, std::vector<double>(nx, 1.0));
-	ux.resize(ny, std::vector<double>(nx, 0.0));
-	uy.resize(ny, std::vector<double>(nx, 0.0));
+    for (int q = 0; q < Q; ++q) {
+        f[q].resize(ny);
+        for (int y = 0; y < ny; ++y) {
+            f[q][y].resize(nx, 0.0);
+        }
+    }
 
-
-
+    rho.resize(ny, std::vector<double>(nx, 1.0));
+    ux.resize(ny, std::vector<double>(nx, 0.0));
+    uy.resize(ny, std::vector<double>(nx, 0.0));
 }
 
-void computeMacroscopic(LBMField& field)
+void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& mask)
 {
 	int nx = field.nx;
 	int ny = field.ny;
 
 	for(int i = 0; i < ny; i++) {
 		for(int j = 0; j < nx; j++) {
+			if(mask[i][j]) {
+				field.rho[i][j] = 1.0;
+				field.ux[i][j] = 0;
+				field.uy[i][j] = 0;
+				continue;
+			
+			}
+
+
+
 			double rho = 0;
 			double ux = 0;
 			double uy = 0;
@@ -37,13 +45,14 @@ void computeMacroscopic(LBMField& field)
 				uy += field.f[k][i][j] * cy[k];
 			}
 			field.rho[i][j] = rho;
-			if(rho >= 0.2) {
+			if(rho >= 1e-4) {
 				field.ux[i][j] = ux / rho;
 				field.uy[i][j] = uy / rho;
 			}
 			else {
-				field.ux[i][j] = 0.0;
-				field.uy[i][j] = 0.0;
+				std::cerr<<"Error in x = " << j << "and y = " << i << "rho = " << rho<<std::endl;
+				    std::exit(1);
+
 			}
 		}
 	}

@@ -5,18 +5,18 @@
 #include <iostream>
 
 LBMField::LBMField(int nx_, int ny_) : nx(nx_), ny(ny_) {
-    f.resize(Q);
+	f.resize(Q);
 
-    for (int q = 0; q < Q; ++q) {
-        f[q].resize(ny);
-        for (int y = 0; y < ny; ++y) {
-            f[q][y].resize(nx, 0.0);
-        }
-    }
+	for (int q = 0; q < Q; ++q) {
+		f[q].resize(ny);
+		for (int y = 0; y < ny; ++y) {
+			f[q][y].resize(nx, 0.0);
+		}
+	}
 
-    rho.resize(ny, std::vector<double>(nx, 1.0));
-    ux.resize(ny, std::vector<double>(nx, 0.0));
-    uy.resize(ny, std::vector<double>(nx, 0.0));
+	rho.resize(ny, std::vector<double>(nx, 1.0));
+	ux.resize(ny, std::vector<double>(nx, 0.0));
+	uy.resize(ny, std::vector<double>(nx, 0.0));
 }
 
 void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& mask)
@@ -31,7 +31,7 @@ void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& ma
 				field.ux[i][j] = 0;
 				field.uy[i][j] = 0;
 				continue;
-			
+
 			}
 
 
@@ -45,15 +45,16 @@ void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& ma
 				uy += field.f[k][i][j] * cy[k];
 			}
 			field.rho[i][j] = rho;
-			if(rho >= 1e-4) {
+			if(rho >=1e-4) {
 				field.ux[i][j] = ux / rho;
 				field.uy[i][j] = uy / rho;
 			}
 			else {
 				std::cerr<<"Error in x = " << j << "and y = " << i << "rho = " << rho<<std::endl;
-				    std::exit(1);
+				
+				std::exit(1);
 
-			}
+			}	
 		}
 	}
 }
@@ -74,7 +75,7 @@ void equilibrium(double feq[Q], double rho, double ux,double uy) {
 
 }
 
-void collision(LBMField& field, double tau) {
+void collision(LBMField& field, double tau,const std::vector<std::vector<bool>>& mask) {
 	int nx = field.nx;
 	int ny = field.ny;
 
@@ -82,6 +83,8 @@ void collision(LBMField& field, double tau) {
 
 	for(int y = 0; y < ny; y++) {
 		for(int x = 0; x < nx; x++) {
+			if(mask[y][x]) continue;
+
 			double rho = field.rho[y][x];
 			double ux = field.ux[y][x];
 			double uy = field.uy[y][x];
@@ -99,9 +102,11 @@ void collision(LBMField& field, double tau) {
 	}
 }
 
-void streaming(LBMField& field) {
+void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask) {
 	int nx = field.nx;
 	int ny = field.ny;
+
+	const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
 	std::vector<std::vector<std::vector<double>>> f_temp = field.f;
 
@@ -119,16 +124,23 @@ void streaming(LBMField& field) {
 	for(int i = 0; i < Q; i++) {
 		for(int y = 0 ; y < ny; y++) {
 			for(int x = 0; x < nx; x++) {
+				if(mask[y][x]) continue;
+
 				int nx_next = x + cx[i];
 				int ny_next = y + cy[i];
 
-				if(nx_next >= 0 && nx_next < nx && ny_next >=0 && ny_next < ny) {
-					field.f[i][ny_next][nx_next] += f_temp[i][y][x];
+				int opp = opposite[i];
 
-
-
-				} 
-
+				if (ny_next < 0 || ny_next >= ny) {
+					field.f[opp][y][x] += f_temp[i][y][x];
+				}
+				else if (nx_next >= 0 && nx_next < nx) {
+					if (mask[ny_next][nx_next]) {
+						field.f[opp][y][x] += f_temp[i][y][x];
+					} else {
+						field.f[i][ny_next][nx_next] += f_temp[i][y][x];
+					}
+				}
 
 			}
 		}
@@ -167,7 +179,7 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 	int ny = field.ny;
 	int x = 0 ;
 
-	for(int y = 0 ; y < ny; y++) {
+	for(int y = 1 ; y < ny-1 ; y++) {
 		double f0 = field.f[0][y][x];
 		double f2 = field.f[2][y][x];
 		double f3 = field.f[3][y][x];
@@ -180,15 +192,15 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 		double f1 = f3 + (2.0/3.0) * rho * u_in;
 		double f5 = f7 - 0.5 * (f2-f4) + (1.0/6.0) * rho * u_in;
 		double f8 = f6 + 0.5 * (f2 - f4) + (1.0/6.0) * rho * u_in;
-        	
-		
+
+
 		field.f[1][y][x] = f1;
-        	field.f[5][y][x] = f5;
-        	field.f[8][y][x] = f8;
+		field.f[5][y][x] = f5;
+		field.f[8][y][x] = f8;
 
 		field.rho[y][x] = rho;
-        	field.ux[y][x] = u_in;
-        	field.uy[y][x] = 0.0; 
+		field.ux[y][x] = u_in;
+		field.uy[y][x] = 0.0; 
 	}
 }
 
@@ -196,27 +208,18 @@ void applyOutflowRight(LBMField& field) {
 	int nx = field.nx;
 	int ny = field.ny;
 	int x = nx - 1;
-	for ( int y = 0 ; y<ny; y++) {
-		field.f[3][y][x] = field.f[3][y][x -1] ; 
-        	field.f[6][y][x] = field.f[6][y][x-1];
-        	field.f[7][y][x] = field.f[7][y][x-1];
 
-                field.rho[y][x] = field.rho[y][x-1];
-                field.ux[y][x] = field.ux[y][x-1];
-                field.uy[y][x] = field.uy[y][x-1];	
-
-	
-	
+	for (int y = 1; y < ny - 1; ++y) {
+		for (int i = 0; i < Q; ++i) {
+			field.f[i][y][x] = field.f[i][y][x - 1];
+		}
 	}
-
-
-
 }
 
 void applyBounceBack(LBMField& field) {
 	int nx = field.nx;
 	int ny = field.ny;
-	
+
 	const int opposite[Q] = {0,3,4,1,2,7,8,5,6};
 
 
@@ -225,19 +228,19 @@ void applyBounceBack(LBMField& field) {
 			for( int i = 0 ; i < Q; i++) {
 				int nx_next = x + cx[i];
 				int ny_next = y + cy[i];
-				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny) {
+				if (ny_next < 0 || ny_next >= ny) {
 					int opp = opposite[i];
 					field.f[opp][y][x] = field.f[i][y][x];
-				
+
 				}
-			
-			
+
+
 			}
-		
-		
+
+
 		}
 
-	
+
 	}
 
 
@@ -245,119 +248,119 @@ void applyBounceBack(LBMField& field) {
 }
 
 void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask) {
-    int nx = field.nx;
-    int ny = field.ny;
-    
-    const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
-    
-    for (int y = 0; y < ny; y++) {
-        for (int x = 0; x < nx; x++) {
-		if(mask[y][x]) continue;
-		
-		for(int i = 0; i < Q; i++) {
-			int nx_next = x + cx[i];
-			int ny_next = y + cy[i];
+	int nx = field.nx;
+	int ny = field.ny;
 
-			if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
-                    		continue;
-			if(mask[ny_next][nx_next]) {
-				int opp = opposite[i];
-				field.f[opp][y][x] = field.f[i][y][x];
-					
-					}
-		
-		
+	const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			if(mask[y][x]) continue;
+
+			for(int i = 0; i < Q; i++) {
+				int nx_next = x + cx[i];
+				int ny_next = y + cy[i];
+
+				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
+					continue;
+				if(mask[ny_next][nx_next]) {
+					int opp = opposite[i];
+					field.f[opp][y][x] = field.f[i][y][x];
+
+				}
+
+
+			}
+
+
+
 		}
-
-
-
-}
-}
+	}
 }
 
 std::pair<double, double> computeForce(LBMField& field, std::vector<std::vector<bool>>& mask) {
-    int nx = field.nx;
-    int ny = field.ny;
-    
-    double Fx = 0.0;
-    double Fy = 0.0;
-    
-    // Таблица противоположных направлений
-    const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
-    
-    for (int y = 0; y < ny; y++) {
-        for (int x = 0; x < nx; x++) {
-            // Если текущая ячейка твёрдая — пропускаем
-            if (mask[y][x]) continue;
-		
+	int nx = field.nx;
+	int ny = field.ny;
 
-	    for(int i = 0; i < Q; i++) {
-	    	int nx_next = x + cx[i];
-		int ny_next = y + cy[i];
+	double Fx = 0.0;
+	double Fy = 0.0;
 
-		if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
-                    continue;
+	// Таблица противоположных направлений
+	const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
-		if(mask[ny_next][nx_next]) {
-			double fi = field.f[i][y][x];
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			// Если текущая ячейка твёрдая — пропускаем
+			if (mask[y][x]) continue;
 
-			Fx += fi * cx[i];
-			Fy += fi * cy[i];
-		
-		
-		}
 
-	    
-	    }
-	}}
-    return {Fx, Fy};
+			for(int i = 0; i < Q; i++) {
+				int nx_next = x + cx[i];
+				int ny_next = y + cy[i];
+
+				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
+					continue;
+
+				if(mask[ny_next][nx_next]) {
+					double fi = field.f[i][y][x];
+
+					Fx += 2 * fi * cx[i];
+					Fy += 2 *  fi * cy[i];
+
+
+				}
+
+
+			}
+		}}
+	return {Fx, Fy};
 }
 
 void writeVTK(const LBMField& field, int step) {
-    int nx = field.nx;
-    int ny = field.ny;
-    
-    // Формируем имя файла: flow_0001.vtk, flow_0002.vtk и т.д.
-    std::ostringstream filename;
-    filename << "flow_" << std::setw(4) << std::setfill('0') << step << ".vtk";
-    
-    std::ofstream file(filename.str());
-    if (!file.is_open()) {
-        std::cerr << "Cannot open file " << filename.str() << " for writing!" << std::endl;
-        return;
-    }
-    
-    // Заголовок VTK-файла
-    file << "# vtk DataFile Version 3.0\n";
-    file << "LBM simulation at step " << step << "\n";
-    file << "ASCII\n";
-    file << "DATASET STRUCTURED_POINTS\n";
-    file << "DIMENSIONS " << nx << " " << ny << " 1\n";
-    file << "ORIGIN 0 0 0\n";
-    file << "SPACING 1 1 1\n";
-    
-    // Данные по точкам
-    file << "POINT_DATA " << nx * ny << "\n";
-    
-    // Поле плотности (скаляр)
-    file << "SCALARS density float\n";
-    file << "LOOKUP_TABLE default\n";
-    for (int y = 0; y < ny; y++) {
-        for (int x = 0; x < nx; x++) {
-            file << field.rho[y][x] << " ";
-        }
-        file << "\n";
-    }
-    
-    // Поле скорости (вектор)
-    file << "VECTORS velocity float\n";
-    for (int y = 0; y < ny; y++) {
-        for (int x = 0; x < nx; x++) {
-            file << field.ux[y][x] << " " << field.uy[y][x] << " 0.0\n";
-        }
-    }
-    
-    file.close();
+	int nx = field.nx;
+	int ny = field.ny;
+
+	// Формируем имя файла: flow_0001.vtk, flow_0002.vtk и т.д.
+	std::ostringstream filename;
+	filename << "flow_" << std::setw(4) << std::setfill('0') << step << ".vtk";
+
+	std::ofstream file(filename.str());
+	if (!file.is_open()) {
+		std::cerr << "Cannot open file " << filename.str() << " for writing!" << std::endl;
+		return;
+	}
+
+	// Заголовок VTK-файла
+	file << "# vtk DataFile Version 3.0\n";
+	file << "LBM simulation at step " << step << "\n";
+	file << "ASCII\n";
+	file << "DATASET STRUCTURED_POINTS\n";
+	file << "DIMENSIONS " << nx << " " << ny << " 1\n";
+	file << "ORIGIN 0 0 0\n";
+	file << "SPACING 1 1 1\n";
+
+	// Данные по точкам
+	file << "POINT_DATA " << nx * ny << "\n";
+
+	// Поле плотности (скаляр)
+	file << "SCALARS density float\n";
+	file << "LOOKUP_TABLE default\n";
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			file << field.rho[y][x] << " ";
+		}
+		file << "\n";
+	}
+
+	// Поле скорости (вектор)
+	file << "VECTORS velocity float\n";
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			file << field.ux[y][x] << " " << field.uy[y][x] << " 0.0\n";
+		}
+	}
+
+	file.close();
 }
 
 
@@ -371,24 +374,24 @@ void loadMaskToLBM( LBMField& field, const std::vector<std::vector<bool>>& mask)
 				for ( int i = 0 ; i < Q ; i++) {
 					field.f[i][y][x] = 0;
 				}
-				field.rho[y][x] = 0;
+				field.rho[y][x] = 1.0;
 				field.ux[y][x] = 0;
 				field.uy[y][x] = 0;
-			
-			
+
+
 			}
-		
-		
-		
+
+
+
 		}
-	
-	
-	
+
+
+
 	}
 
 
 
 }
-	
+
 
 

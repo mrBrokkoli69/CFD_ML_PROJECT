@@ -67,9 +67,9 @@ void computeMacroscopic(LBMField& field, const std::vector<std::vector<bool>>& m
 
 void equilibrium(double feq[Q], double rho, double ux, double uy); // определение равновесной функции распределения
 
-void collision(LBMField& field, double tau); //столкновение
+void collision(LBMField& field, double tau, const std::vector<std::vector<bool>>& mask); //столкновение
 
-void streaming(LBMField& field); //перенос
+void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask); //перенос
 
 void initField(LBMField& field, double rho0, double ux0, double uy0); // инициализация поля начальными данными 
 

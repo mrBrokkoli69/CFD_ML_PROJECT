@@ -17,20 +17,20 @@ void addCylinder(std::vector<std::vector<bool>>& mask, int cx, int cy, int r)  {
 }
 int main() {
 	// Размеры сетки
-	const int nx = 128;
-	const int ny = 128;
+	const int nx = 256;
+	const int ny = 256;
 
 	// Параметры течения
 	const double tau = 0.7;        // время релаксации
-	const double u_in = 0.01;       // скорость на входе
+	const double u_in = 0.05;       // скорость на входе
 	const double rho0 = 1.0;        // начальная плотность
 
 
 	// Параметры цилиндра
-	int cx = nx/2;      // центр по x
+	int cx = nx - 132;      // центр по x
 	int cy = ny/2;      // центр по y
-	int r = 30;          // радиус в ячейках
-			    // Параметры для расчёта Re
+	int r = 40;          // радиус в ячейках
+			     // Параметры для расчёта Re
 	double cs2 = 1.0/3.0;
 	double nu = cs2 * (tau - 0.5);  // кинематическая вязкость
 	double L = 2 * r;                 // характерный размер (диаметр)
@@ -48,13 +48,15 @@ int main() {
 
 	// Создаём пустую маску (пока нет тела)
 	std::vector<std::vector<bool>> mask(ny, std::vector<bool>(nx, false));
-	addCylinder(mask, cx, cy, r);
+	
+	addCylinder(mask,cx,cy,r);
+
 
 	// Применяем маску (обнуляем твёрдые ячейки)
 	loadMaskToLBM(field, mask);
 
 	// Временной цикл
-	const int maxSteps = 300;
+	const int maxSteps = 500;
 	const int vtkInterval = 10;
 
 	std::cout << "Starting LBM simulation..." << std::endl;
@@ -66,19 +68,19 @@ int main() {
 		computeMacroscopic(field, mask);
 
 		// Выполняем столкновение
-		collision(field, tau);
+		collision(field, tau, mask);
 
 		// Перенос
-		streaming(field);
+		streaming(field,mask);
 
-		applyBounceBack(field);
-	
+	//	applyBounceBack(field);
+
 		// Граничные условия
 		applyZouHeLeft(field, u_in);           // вход слева
 		applyOutflowRight(field);               // выход справа
-		applyBounceBackMask(field, mask);       // отражение от тела
+							//	applyBounceBackMask(field, mask);       // отражение от тела
 
-		// Сохраняем VTK с заданным интервалом
+							// Сохраняем VTK с заданным интервалом
 		if (step % vtkInterval == 0) {
 			writeVTK(field, step);
 			std::cout << "Step " << step << " completed" << std::endl;

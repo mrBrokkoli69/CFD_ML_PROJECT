@@ -204,6 +204,9 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 	}
 }
 
+
+
+
 void applyOutflowRight(LBMField& field) {
 	int nx = field.nx;
 	int ny = field.ny;
@@ -211,10 +214,45 @@ void applyOutflowRight(LBMField& field) {
 
 	for (int y = 1; y < ny - 1; ++y) {
 		for (int i = 0; i < Q; ++i) {
-			field.f[i][y][x] = field.f[i][y][x - 1];
+			field.f[i][y][x] = 2 * field.f[i][y][x - 1] - field.f[i][y][x-2];
 		}
 	}
+	for (int i = 0; i < Q; i++) {
+		field.f[i][0][x] = field.f[i][1][x-1];
+		field.f[i][ny-1][x] = field.f[i][ny-2][x-1];
+	
+	
+	}
 }
+
+void applySpongeZone(LBMField& field, double rho_target, double ux_target, double uy_target, int sponge_width) {
+	int nx = field.nx;
+	int ny = field.ny;
+
+	if(sponge_width < 0) return;
+	if(sponge_width > nx) sponge_width = nx - 1;
+
+	int x_start = nx - sponge_width;
+
+
+	double feq[Q];
+
+	for(int x = x_start ; x < nx; x++) {
+		for(int y = 0 ; y < ny; y++) {
+		   double xi = double(x - x_start) / double(sponge_width - 1);
+       		   double sigma = 0.2 * xi * xi;	
+		   equilibrium(feq , rho_target, ux_target, uy_target);
+
+		   for(int i = 0 ; i < Q; i++) {
+		   	field.f[i][y][x] = (1 - sigma) * field.f[i][y][x] + sigma * feq[i];
+		   
+		   }
+		}
+	
+	}
+
+}
+
 
 void applyBounceBack(LBMField& field) {
 	int nx = field.nx;

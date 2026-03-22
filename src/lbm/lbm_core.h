@@ -77,6 +77,10 @@ void applyZouHeLeft(LBMField& field, double u_in);  //гран условие с
 
 void applyOutflowRight(LBMField& field); //гран условие справа
 
+void applySpongeZone(LBMField& field, double rho_target, double ux_target, double uy_target, int sponge_width);
+
+
+
 void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
 
 void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask); //bounce back для маски

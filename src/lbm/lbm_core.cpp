@@ -51,7 +51,7 @@ void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& ma
 			}
 			else {
 				std::cerr<<"Error in x = " << j << "and y = " << i << "rho = " << rho<<std::endl;
-				
+
 				std::exit(1);
 
 			}	
@@ -154,25 +154,52 @@ void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask) {
 }
 
 
+double poiseuilleProfile(int y, int ny , double u_max)   //Функция, задающая параболический поток(чтобы со стенками не было проблем)
+{
+	double H = static_cast<double>(ny-2);
+	double yy = static_cast<double>(y-1) / H;
+
+	return 4.0 * u_max * yy * (1.0-yy);
+
+
+
+}
+
+
+
+
+
 void initField(LBMField& field, double rho0, double ux0, double uy0) {
 	int nx = field.nx;
 	int ny = field.ny;
 
 	double feq[Q];
-
-	equilibrium(feq , rho0, ux0, uy0);
-
+	double ux;
+	double uy;
 	for (int y = 0; y < ny; y++) {
 		for (int x = 0; x < nx; x++) {
+			if( y == 0 || y == ny - 1 ) {
+				ux = 0;
+				uy = 0;
+			}
+			else {
+				ux = poiseuilleProfile (y , ny, ux0); // Скорость в конкретном Y
+				uy = 0;
+			}
+
+			equilibrium(feq , rho0, ux, uy);
+
 			for (int i = 0; i < Q; i++) {
 				field.f[i][y][x] = feq[i];
 			}
 			field.rho[y][x] = rho0;
-			field.ux[y][x] = ux0;
-			field.uy[y][x] = uy0;
+			field.ux[y][x] = ux;
+			field.uy[y][x] = uy;
 		}
 	}
+
 }
+
 
 void applyZouHeLeft(LBMField& field, double u_in) {
 	int nx = field.nx;
@@ -180,6 +207,9 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 	int x = 0 ;
 
 	for(int y = 1 ; y < ny-1 ; y++) {
+
+		double ux_in = poiseuilleProfile(y, ny, u_in);
+
 		double f0 = field.f[0][y][x];
 		double f2 = field.f[2][y][x];
 		double f3 = field.f[3][y][x];
@@ -187,11 +217,11 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 		double f6 = field.f[6][y][x];
 		double f7 = field.f[7][y][x];
 
-		double rho = (f0 + f2 + f4 + 2 * ( f3 + f6 + f7)) / (1-u_in) ;
+		double rho = (f0 + f2 + f4 + 2 * ( f3 + f6 + f7)) / (1-ux_in) ;
 
-		double f1 = f3 + (2.0/3.0) * rho * u_in;
-		double f5 = f7 - 0.5 * (f2-f4) + (1.0/6.0) * rho * u_in;
-		double f8 = f6 + 0.5 * (f2 - f4) + (1.0/6.0) * rho * u_in;
+		double f1 = f3 + (2.0/3.0) * rho * ux_in;
+		double f5 = f7 - 0.5 * (f2-f4) + (1.0/6.0) * rho * ux_in;
+		double f8 = f6 + 0.5 * (f2 - f4) + (1.0/6.0) * rho * ux_in;
 
 
 		field.f[1][y][x] = f1;
@@ -199,7 +229,7 @@ void applyZouHeLeft(LBMField& field, double u_in) {
 		field.f[8][y][x] = f8;
 
 		field.rho[y][x] = rho;
-		field.ux[y][x] = u_in;
+		field.ux[y][x] = ux_in;
 		field.uy[y][x] = 0.0; 
 	}
 }
@@ -213,15 +243,24 @@ void applyOutflowRight(LBMField& field) {
 	int x = nx - 1;
 
 	for (int y = 1; y < ny - 1; ++y) {
+		double rho_b = 1;
+		double ux_b = field.ux[y][x-1];
+		double uy_b = field.uy[y][x-1];
+		double feq_b[Q];
+
+		equilibrium(feq_b , rho_b , ux_b , uy_b);
+
+
+		double rho_f = field.rho[y][x - 1];
+		double ux_f = field.ux[y][x - 1];
+		double uy_f = field.uy[y][x - 1];
+		double feq_f[Q];
+
+		equilibrium(feq_f, rho_f, ux_f, uy_f);
+
 		for (int i = 0; i < Q; ++i) {
-			field.f[i][y][x] = 2 * field.f[i][y][x - 1] - field.f[i][y][x-2];
+    			field.f[i][y][x] = feq_b[i] + (field.f[i][y][x - 1] - feq_f[i]);
 		}
-	}
-	for (int i = 0; i < Q; i++) {
-		field.f[i][0][x] = field.f[i][1][x-1];
-		field.f[i][ny-1][x] = field.f[i][ny-2][x-1];
-	
-	
 	}
 }
 
@@ -238,20 +277,46 @@ void applySpongeZone(LBMField& field, double rho_target, double ux_target, doubl
 	double feq[Q];
 
 	for(int x = x_start ; x < nx; x++) {
-		for(int y = 0 ; y < ny; y++) {
-		   double xi = double(x - x_start) / double(sponge_width - 1);
-       		   double sigma = 0.2 * xi * xi;	
-		   equilibrium(feq , rho_target, ux_target, uy_target);
+		for(int y = 1 ; y < ny-1 ; y++) {
+			double xi = double(x - x_start) / double(sponge_width - 1);
+			double sigma = 0.02 * xi * xi;	
+			equilibrium(feq , rho_target, ux_target, uy_target);
 
-		   for(int i = 0 ; i < Q; i++) {
-		   	field.f[i][y][x] = (1 - sigma) * field.f[i][y][x] + sigma * feq[i];
-		   
-		   }
+			for(int i = 0 ; i < Q; i++) {
+				field.f[i][y][x] = (1 - sigma) * field.f[i][y][x] + sigma * feq[i];
+
+			}
 		}
-	
+
 	}
 
 }
+
+void resetCornersToRest(LBMField& field) {
+	const int corners[4][2] = {
+		{0, 0},
+		{field.nx - 1, 0},
+		{0, field.ny - 1},
+		{field.nx - 1, field.ny - 1}
+	};
+
+	double feq[Q];
+	equilibrium(feq, 1.0, 0.0, 0.0);
+
+	for (int k = 0; k < 4; ++k) {
+		int x = corners[k][0];
+		int y = corners[k][1];
+
+		field.rho[y][x] = 1.0;
+		field.ux[y][x] = 0.0;
+		field.uy[y][x] = 0.0;
+
+		for (int i = 0; i < Q; ++i) {
+			field.f[i][y][x] = feq[i];
+		}
+	}
+}
+
 
 
 void applyBounceBack(LBMField& field) {

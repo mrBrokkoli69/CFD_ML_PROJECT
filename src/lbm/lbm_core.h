@@ -79,7 +79,7 @@ void applyOutflowRight(LBMField& field); //гран условие справа
 
 void applySpongeZone(LBMField& field, double rho_target, double ux_target, double uy_target, int sponge_width);
 
-
+void resetCornersToRest(LBMField& field);
 
 void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
 

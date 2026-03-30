@@ -17,23 +17,23 @@ void addCylinder(std::vector<std::vector<bool>>& mask, int cx, int cy, int r)  {
 }
 int main() {
 	// Размеры сетки
-	const int nx = 1024;
-	const int ny = 512;
+	const int nx = 256;
+	const int ny = 100;
 
 	// Параметры течения
-	const double tau = 0.7;        // время релаксации
-	const double u_in = 0.01;       // скорость на входе
+	const double tau = 0.65;        // время релаксации
+	const double u_in = 0.05;       // скорость на входе
 	const double rho0 = 1.0;        // начальная плотность
 
 
 	// Параметры цилиндра
-	int cx = nx/3;      // центр по x
+	int cx = nx/3 ;      // центр по x
 	int cy = ny/2;      // центр по y
-	int r = 55;          // радиус в ячейках
+	int r = 5;          // радиус в ячейках
 			     // Параметры для расчёта Re
 	double cs2 = 1.0/3.0;
 	double nu = cs2 * (tau - 0.5);  // кинематическая вязкость
-	double L = 2 * r;                 // характерный размер (диаметр)
+	double L = 2 * r;                 // характе:Жрный размер (диаметр)
 	double Re = u_in * L / nu;
 
 	std::cout << "Re = " << Re << std::endl;
@@ -77,9 +77,9 @@ int main() {
 
 		// Граничные условия
 		applyZouHeLeft(field, u_in);           // вход слева
-	//	applyOutflowRight(field);               // выход справа
-		applySpongeZone(field,1, u_in, 0 ,80);
-
+		applyOutflowRight(field);               // выход справа
+		//applySpongeZone(field,1, u_in, 0 ,15);
+		resetCornersToRest(field);    //настройка углов
 							//	applyBounceBackMask(field, mask);       // отражение от тела
 
 							// Сохраняем VTK с заданным интервалом

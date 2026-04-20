@@ -1,0 +1,2 @@
+g++ -Wall -Wextra -g3 -std=c++17 -c src/main_lbm.cpp -o src/main_lbm.o
+g++ src/lbm/lbm_core.o src/main_lbm.o -o lbm_test -lncurses

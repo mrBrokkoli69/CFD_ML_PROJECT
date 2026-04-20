@@ -5,6 +5,8 @@
 #include <cmath>
 #include <vector>
 #include <utility>
+#include <string>
+
 
 static const int D = 2;
 static const int Q = 9;
@@ -69,7 +71,7 @@ void equilibrium(double feq[Q], double rho, double ux, double uy); // опред
 
 void collision(LBMField& field, double tau, const std::vector<std::vector<bool>>& mask); //столкновение
 
-void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask); //перенос
+void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask, double& Fx, double& Fy); //перенос
 
 void initField(LBMField& field, double rho0, double ux0, double uy0); // инициализация поля начальными данными 
 
@@ -77,17 +79,9 @@ void applyZouHeLeft(LBMField& field, double u_in);  //гран условие с
 
 void applyOutflowRight(LBMField& field); //гран условие справа
 
-void applySpongeZone(LBMField& field, double rho_target, double ux_target, double uy_target, int sponge_width);
-
 void resetCornersToRest(LBMField& field);
 
-void applyBounceBack(LBMField& field); //гран условие сверху и снизу(просто отражение)
-
-void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask); //bounce back для маски
-
-std::pair<double, double> computeForce ( LBMField& field , std::vector<std::vector<bool>>& mask); //вычисление сил у поверхности твердого тела
-
-void writeVTK(const LBMField& field, int step); //функция записи результатов в файл для визуализации в OpenFoam
+void writeVTK(const LBMField& field, int step, const std::string& outputDir); //функция записи результатов в файл для визуализации в OpenFoam
 
 void loadMaskToLBM( LBMField& field, const std::vector<std::vector<bool>>& mask) ; //функция связи маски с LBM-сеткой
 

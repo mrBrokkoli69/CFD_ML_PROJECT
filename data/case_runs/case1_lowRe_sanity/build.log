@@ -1,0 +1,15 @@
+g++ -Wall -Wextra -g3 -std=c++17 -c src/lbm/lbm_core.cpp -o src/lbm/lbm_core.o
+src/lbm/lbm_core.cpp: In function «void initField(LBMField&, double, double, double)»:
+src/lbm/lbm_core.cpp:172:65: предупреждение: неиспользуемый параметр «uy0» [-Wunused-parameter]
+  172 | void initField(LBMField& field, double rho0, double ux0, double uy0) {
+      |                                                          ~~~~~~~^~~
+src/lbm/lbm_core.cpp: In function «void applyZouHeLeft(LBMField&, double)»:
+src/lbm/lbm_core.cpp:205:13: предупреждение: неиспользуемая переменная «nx» [-Wunused-variable]
+  205 |         int nx = field.nx;
+      |             ^~
+src/lbm/lbm_core.cpp: In function «void applyBounceBack(LBMField&)»:
+src/lbm/lbm_core.cpp:332:37: предупреждение: неиспользуемая переменная «nx_next» [-Wunused-variable]
+  332 |                                 int nx_next = x + cx[i];
+      |                                     ^~~~~~~
+g++ -Wall -Wextra -g3 -std=c++17 -c src/main_lbm.cpp -o src/main_lbm.o
+g++ src/lbm/lbm_core.o src/main_lbm.o -o lbm_test -lncurses

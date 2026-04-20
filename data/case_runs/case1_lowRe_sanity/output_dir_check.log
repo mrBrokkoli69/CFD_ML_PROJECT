@@ -1,0 +1,3 @@
+19:    const std::string outputDir = "/run/media/deck/SD512/6sem/IT_PROJECT/CFD_ML_PROJECT/data/case_runs/case1_lowRe_sanity";
+86:			writeVTK(field, step, outputDir);
+95:	writeVTK(field, maxSteps, outputDir);

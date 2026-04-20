@@ -16,29 +16,39 @@ void addCylinder(std::vector<std::vector<bool>>& mask, int cx, int cy, int r)  {
 	}
 }
 int main() {
-	// Размеры сетки
-	const int nx = 256;
-	const int ny = 100;
+	const std::string outputDir = "./data/case_runs/test_case";
 
-	// Параметры течения
-	const double tau = 0.65;        // время релаксации
-	const double u_in = 0.05;       // скорость на входе
-	const double rho0 = 1.0;        // начальная плотность
-
-
-	// Параметры цилиндра
-	int cx = nx/3 ;      // центр по x
-	int cy = ny/2;      // центр по y
-	int r = 5;          // радиус в ячейках
-			     // Параметры для расчёта Re
+	const int nx = 441;
+	const int ny = 84;
+	const double tau = 0.6;
+	const double u_in = 0.05;
+	
+	int cx = 40;
+	int cy = 41;
+	int r = 10;
+	
+	const int maxSteps = 10000;
+	const int vtkInterval = 200;
+	const int coutInterval = 1000;
+	
+	// Параметры для расчёта Re
 	double cs2 = 1.0/3.0;
 	double nu = cs2 * (tau - 0.5);  // кинематическая вязкость
 	double L = 2 * r;                 // характе:Жрный размер (диаметр)
-	double Re = u_in * L / nu;
-
-	std::cout << "Re = " << Re << std::endl;
+	double Re = (2.0/3.0) *  u_in * L / nu;
 
 
+	const double rho0 = 1.0;        // начальная плотность
+
+	std::cout << "Re = " << Re <<" V "<<u_in<<" L "<<L<< std::endl;
+	//Расчет сил
+	
+	double Fx = 0;
+	double Fy = 0;
+	double FsumX = 0;
+	double FsumY = 0;
+	double FmeanX = 0 ;
+	double FmeanY = 0;
 
 	// Создаём поле
 	LBMField field(nx, ny);
@@ -48,58 +58,56 @@ int main() {
 
 	// Создаём пустую маску (пока нет тела)
 	std::vector<std::vector<bool>> mask(ny, std::vector<bool>(nx, false));
-	
+
 	addCylinder(mask,cx,cy,r);
 
 
 	// Применяем маску (обнуляем твёрдые ячейки)
 	loadMaskToLBM(field, mask);
-
-	// Временной цикл
-	const int maxSteps = 2500;
-	const int vtkInterval = 10;
-
 	std::cout << "Starting LBM simulation..." << std::endl;
 	std::cout << "Grid: " << nx << " x " << ny << std::endl;
 	std::cout << "tau = " << tau << ", u_in = " << u_in << std::endl;
-
+	
 	for (int step = 0; step < maxSteps; step++) {
-		// Вычисляем макроскопические величины
-		computeMacroscopic(field, mask);
+   		 Fx = 0.0;
+   		 Fy = 0.0;
 
-		// Выполняем столкновение
-		collision(field, tau, mask);
+    		computeMacroscopic(field, mask);
+    		collision(field, tau, mask);
+    		streaming(field, mask, Fx, Fy);
 
-		// Перенос
-		streaming(field,mask);
+    		applyZouHeLeft(field, u_in);
+    		applyOutflowRight(field);
+    		resetCornersToRest(field);
 
-	//	applyBounceBack(field);
+    		FsumX += Fx;
+    		FsumY += Fy;
 
-		// Граничные условия
-		applyZouHeLeft(field, u_in);           // вход слева
-		applyOutflowRight(field);               // выход справа
-		//applySpongeZone(field,1, u_in, 0 ,15);
-		resetCornersToRest(field);    //настройка углов
-							//	applyBounceBackMask(field, mask);       // отражение от тела
+    		if (step % vtkInterval == 0) {
+        		writeVTK(field, step, outputDir);
+    		}
 
-							// Сохраняем VTK с заданным интервалом
-		if (step % vtkInterval == 0) {
-			writeVTK(field, step);
-			std::cout << "Step " << step << " completed" << std::endl;
+    		if ((step + 1) % coutInterval == 0) {
+        		FmeanX = FsumX / coutInterval;
+        		FmeanY = FsumY / coutInterval;
+
+        		std::cout << "Step " << step + 1
+                 		 << " avg Fx = " << FmeanX
+                 		 << ", avg Fy = " << FmeanY
+                 		 << std::endl;
+
+        		FsumX = 0.0;
+        		FsumY = 0.0;
+    		}
 		}
-	}
-
 	// Сохраняем последний шаг
-	writeVTK(field, maxSteps);
+	writeVTK(field, maxSteps, outputDir);
 
 	// Вычисляем силу (опционально)
-	auto force = computeForce(field, mask);
-	std::cout << "Final force: Fx = " << force.first << ", Fy = " << force.second << std::endl;
-	// После computeForce
-	double Fx = force.first;
+	std::cout << "Final force: Fx = " << FmeanX << ", Fy = " << FmeanY << std::endl;
 	double rho_in = 1.0;  // плотность на входе (решёточная)
 
-	double Cd = 2.0 * Fx / (rho_in * u_in * u_in * L);
+	double Cd = 2.0 * FmeanX / (rho_in * 2 / 3 * u_in * 2 / 3 * u_in * L);
 
 	std::cout << "Cd = " << Cd << std::endl;
 	std::cout << "Simulation finished!" << std::endl;

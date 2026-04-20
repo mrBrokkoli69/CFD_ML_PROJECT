@@ -1,0 +1,57 @@
+Re = 12
+Starting LBM simulation...
+Grid: 256 x 100
+tau = 0.75, u_in = 0.1
+Step 0 completed
+Step 100 completed
+Step 200 completed
+Step 300 completed
+Step 400 completed
+Step 500 completed
+Step 600 completed
+Step 700 completed
+Step 800 completed
+Step 900 completed
+Step 1000 completed
+Step 1100 completed
+Step 1200 completed
+Step 1300 completed
+Step 1400 completed
+Step 1500 completed
+Step 1600 completed
+Step 1700 completed
+Step 1800 completed
+Step 1900 completed
+Step 2000 completed
+Step 2100 completed
+Step 2200 completed
+Step 2300 completed
+Step 2400 completed
+Step 2500 completed
+Step 2600 completed
+Step 2700 completed
+Step 2800 completed
+Step 2900 completed
+Step 3000 completed
+Step 3100 completed
+Step 3200 completed
+Step 3300 completed
+Step 3400 completed
+Step 3500 completed
+Step 3600 completed
+Step 3700 completed
+Step 3800 completed
+Step 3900 completed
+Step 4000 completed
+Step 4100 completed
+Step 4200 completed
+Step 4300 completed
+Step 4400 completed
+Step 4500 completed
+Step 4600 completed
+Step 4700 completed
+Step 4800 completed
+Step 4900 completed
+Final force: Fx = 0.324608, Fy = -0.00141957
+Cd = 6.49216
+Simulation finished!

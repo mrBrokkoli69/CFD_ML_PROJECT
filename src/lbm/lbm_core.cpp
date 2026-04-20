@@ -102,13 +102,16 @@ void collision(LBMField& field, double tau,const std::vector<std::vector<bool>>&
 	}
 }
 
-void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask) {
+void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask, double& Fx, double& Fy) {
 	int nx = field.nx;
 	int ny = field.ny;
+	
 
 	const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
 	std::vector<std::vector<std::vector<double>>> f_temp = field.f;
+
+
 
 	for(int i = 0; i < Q; i++) {
 		for(int y = 0 ; y < ny; y++) {
@@ -137,6 +140,8 @@ void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask) {
 				else if (nx_next >= 0 && nx_next < nx) {
 					if (mask[ny_next][nx_next]) {
 						field.f[opp][y][x] += f_temp[i][y][x];
+						Fx += 2.0 * f_temp[i][y][x] * cx[i];
+						Fy += 2.0 * f_temp[i][y][x] * cy[i]; 
 					} else {
 						field.f[i][ny_next][nx_next] += f_temp[i][y][x];
 					}
@@ -264,33 +269,7 @@ void applyOutflowRight(LBMField& field) {
 	}
 }
 
-void applySpongeZone(LBMField& field, double rho_target, double ux_target, double uy_target, int sponge_width) {
-	int nx = field.nx;
-	int ny = field.ny;
 
-	if(sponge_width < 0) return;
-	if(sponge_width > nx) sponge_width = nx - 1;
-
-	int x_start = nx - sponge_width;
-
-
-	double feq[Q];
-
-	for(int x = x_start ; x < nx; x++) {
-		for(int y = 1 ; y < ny-1 ; y++) {
-			double xi = double(x - x_start) / double(sponge_width - 1);
-			double sigma = 0.02 * xi * xi;	
-			equilibrium(feq , rho_target, ux_target, uy_target);
-
-			for(int i = 0 ; i < Q; i++) {
-				field.f[i][y][x] = (1 - sigma) * field.f[i][y][x] + sigma * feq[i];
-
-			}
-		}
-
-	}
-
-}
 
 void resetCornersToRest(LBMField& field) {
 	const int corners[4][2] = {
@@ -319,113 +298,15 @@ void resetCornersToRest(LBMField& field) {
 
 
 
-void applyBounceBack(LBMField& field) {
-	int nx = field.nx;
-	int ny = field.ny;
-
-	const int opposite[Q] = {0,3,4,1,2,7,8,5,6};
 
 
-	for(int y = 0; y < ny; y++) {
-		for(int x = 0; x < nx; x++) {
-			for( int i = 0 ; i < Q; i++) {
-				int nx_next = x + cx[i];
-				int ny_next = y + cy[i];
-				if (ny_next < 0 || ny_next >= ny) {
-					int opp = opposite[i];
-					field.f[opp][y][x] = field.f[i][y][x];
-
-				}
-
-
-			}
-
-
-		}
-
-
-	}
-
-
-
-}
-
-void applyBounceBackMask(LBMField& field, std::vector<std::vector<bool>>& mask) {
-	int nx = field.nx;
-	int ny = field.ny;
-
-	const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
-
-	for (int y = 0; y < ny; y++) {
-		for (int x = 0; x < nx; x++) {
-			if(mask[y][x]) continue;
-
-			for(int i = 0; i < Q; i++) {
-				int nx_next = x + cx[i];
-				int ny_next = y + cy[i];
-
-				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
-					continue;
-				if(mask[ny_next][nx_next]) {
-					int opp = opposite[i];
-					field.f[opp][y][x] = field.f[i][y][x];
-
-				}
-
-
-			}
-
-
-
-		}
-	}
-}
-
-std::pair<double, double> computeForce(LBMField& field, std::vector<std::vector<bool>>& mask) {
-	int nx = field.nx;
-	int ny = field.ny;
-
-	double Fx = 0.0;
-	double Fy = 0.0;
-
-	// Таблица противоположных направлений
-	const int opposite[9] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
-
-	for (int y = 0; y < ny; y++) {
-		for (int x = 0; x < nx; x++) {
-			// Если текущая ячейка твёрдая — пропускаем
-			if (mask[y][x]) continue;
-
-
-			for(int i = 0; i < Q; i++) {
-				int nx_next = x + cx[i];
-				int ny_next = y + cy[i];
-
-				if (nx_next < 0 || nx_next >= nx || ny_next < 0 || ny_next >= ny)
-					continue;
-
-				if(mask[ny_next][nx_next]) {
-					double fi = field.f[i][y][x];
-
-					Fx += 2 * fi * cx[i];
-					Fy += 2 *  fi * cy[i];
-
-
-				}
-
-
-			}
-		}}
-	return {Fx, Fy};
-}
-
-void writeVTK(const LBMField& field, int step) {
+void writeVTK(const LBMField& field, int step, const std::string& outputDir) {
 	int nx = field.nx;
 	int ny = field.ny;
 
 	// Формируем имя файла: flow_0001.vtk, flow_0002.vtk и т.д.
 	std::ostringstream filename;
-	filename << "flow_" << std::setw(4) << std::setfill('0') << step << ".vtk";
+	filename << outputDir << "/flow_" << std::setw(4) << std::setfill('0') << step << ".vtk";
 
 	std::ofstream file(filename.str());
 	if (!file.is_open()) {

@@ -4,6 +4,7 @@ CXXFLAGS = -Wall -Wextra -g3 -std=c++17
 # Папки с исходниками
 SRCDIR_EDITOR = src/mask_editor
 SRCDIR_LBM = src/lbm
+SRCDIR_GEOMETRY = src/geometry
 
 # Исполняемые файлы
 TARGET_EDITOR = mask_editor
@@ -17,8 +18,9 @@ SRCS_EDITOR = $(SRCDIR_EDITOR)/editor.cpp \
 
 # Файлы для LBM (без editor.cpp!)
 SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
-           src/main_lbm.cpp
-
+           src/main_lbm.cpp \
+	   $(SRCDIR_GEOMETRY)/geometry.cpp
+	   
 # Объектные файлы для редактора
 OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)
 

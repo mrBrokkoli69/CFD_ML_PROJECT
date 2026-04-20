@@ -1,21 +1,13 @@
+
 #include "lbm/lbm_core.h"
+
+#include "geometry/geometry.h"
 
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 
-void addCylinder(Mask& mask, int cx, int cy, int r) {
-    for (int y = 0; y < mask.ny; ++y) {
-        for (int x = 0; x < mask.nx; ++x) {
-            int dx = x - cx;
-            int dy = y - cy;
 
-            if (dx * dx + dy * dy <= r * r) {
-                mask.solid[y][x] = true;
-            }
-        }
-    }
-}
 
 SimulationResult runCase(const SimulationConfig& config, const Mask& mask, double characteristicLength) {
     if (mask.nx != config.nx || mask.ny != config.ny) {
@@ -103,12 +95,8 @@ int main() {
     double nu = CS2 * (config.tau - 0.5);
     double Re = config.uMax * characteristicLength * (2.0/3.0) / nu;
 
-    Mask mask;
-    mask.nx = config.nx;
-    mask.ny = config.ny;
-    mask.solid.assign(config.ny, std::vector<bool>(config.nx, false));
-
-    addCylinder(mask, cx, cy, r);
+    Mask mask = createEmptyMask(config.nx, config.ny);
+    addCylinder(mask,cx,cy,r);
 
     std::cout << "Re = " << Re << std::endl;
 

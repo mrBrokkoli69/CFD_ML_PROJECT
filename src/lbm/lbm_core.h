@@ -50,6 +50,33 @@ static const double w[Q] = {
 static const double CS2 = 1.0/3.0;
 static const double CS = std::sqrt(CS2);
 
+struct SimulationConfig {
+    int nx;
+    int ny;
+    int maxSteps;
+    int vtkInterval;
+    int coutInterval;
+
+    double tau;
+    double rho0;
+    double uMax;
+
+    std::string outputDir;
+};
+
+struct SimulationResult {
+    double fx;
+    double fy;
+    double cd;
+};
+
+struct Mask {
+    int nx;
+    int ny;
+    std::vector<std::vector<bool>> solid;
+};
+
+
 struct LBMField {
 	int nx;
 	int ny;

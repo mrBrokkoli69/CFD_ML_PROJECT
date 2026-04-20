@@ -1,48 +1,43 @@
 #include "lbm/lbm_core.h"
 #include <iostream>
 #include <cmath>
-void addCylinder(std::vector<std::vector<bool>>& mask, int cx, int cy, int r)  {  //функция добавления цилиндра для проверки
-	int ny = mask.size();
-	int nx = mask[0].size();
-
+void addCylinder(Mask& mask, int cx, int cy, int r) {
+	int ny = mask.ny;
+	int nx = mask.nx;
 	for (int y = 0; y < ny; y++) {
 		for (int x = 0; x < nx; x++) {
 			int dx = x - cx;
 			int dy = y - cy;
 			if (dx*dx + dy*dy <= r*r) {
-				mask[y][x] = true;
+				mask.solid[y][x] = true;
 			}
 		}
 	}
 }
 int main() {
-	const std::string outputDir = "./data/case_runs/test_case";
+	SimulationConfig config;
 
-	const int nx = 441;
-	const int ny = 84;
-	const double tau = 0.6;
-	const double u_in = 0.05;
-	
+	config.outputDir = "./data/case_runs/test_case";
+
+	config.nx = 441;
+	config.ny = 84;
+	config.tau = 0.6;
+	config.uMax = 0.05;
+	config.rho0 = 1.0;
+
+	config.maxSteps = 6000;
+	config.vtkInterval = 100;
+	config.coutInterval = 1000;
+
 	int cx = 40;
 	int cy = 41;
 	int r = 10;
-	
-	const int maxSteps = 10000;
-	const int vtkInterval = 200;
-	const int coutInterval = 1000;
-	
-	// Параметры для расчёта Re
-	double cs2 = 1.0/3.0;
-	double nu = cs2 * (tau - 0.5);  // кинематическая вязкость
-	double L = 2 * r;                 // характе:Жрный размер (диаметр)
-	double Re = (2.0/3.0) *  u_in * L / nu;
 
+	double nu = CS2 * (config.tau - 0.5);
+	double L = 2 * r;
+	double Re = (2.0/3.0) * config.uMax * L / nu;	
+	std::cout << "Re = " << Re <<"\nUmax =  "<<config.uMax<<"\nL= "<<L<< std::endl;
 
-	const double rho0 = 1.0;        // начальная плотность
-
-	std::cout << "Re = " << Re <<" V "<<u_in<<" L "<<L<< std::endl;
-	//Расчет сил
-	
 	double Fx = 0;
 	double Fy = 0;
 	double FsumX = 0;
@@ -50,66 +45,68 @@ int main() {
 	double FmeanX = 0 ;
 	double FmeanY = 0;
 
-	// Создаём поле
-	LBMField field(nx, ny);
+	LBMField field(config.nx, config.ny);
+	initField(field, config.rho0, config.uMax, 0.0);
 
-	// Инициализация (равновесие с rho0, ux=u_in,  uy=0)
-	initField(field, rho0, u_in , 0.0);
+	Mask mask;
+	mask.nx = config.nx;
+	mask.ny = config.ny;
+	mask.solid.assign(config.ny, std::vector<bool>(config.nx, false));
 
-	// Создаём пустую маску (пока нет тела)
-	std::vector<std::vector<bool>> mask(ny, std::vector<bool>(nx, false));
-
-	addCylinder(mask,cx,cy,r);
+	addCylinder(mask, cx, cy, r);
 
 
 	// Применяем маску (обнуляем твёрдые ячейки)
-	loadMaskToLBM(field, mask);
+	loadMaskToLBM(field, mask.solid);
 	std::cout << "Starting LBM simulation..." << std::endl;
-	std::cout << "Grid: " << nx << " x " << ny << std::endl;
-	std::cout << "tau = " << tau << ", u_in = " << u_in << std::endl;
-	
-	for (int step = 0; step < maxSteps; step++) {
-   		 Fx = 0.0;
-   		 Fy = 0.0;
+	std::cout << "Grid: " << config.nx << " x " << config.ny << std::endl;
+	std::cout << "tau = " << config.tau << ", u_max = " << config.uMax << std::endl;
 
-    		computeMacroscopic(field, mask);
-    		collision(field, tau, mask);
-    		streaming(field, mask, Fx, Fy);
+	for (int step = 0; step < config.maxSteps; step++) {
+		Fx = 0.0;
+		Fy = 0.0;
 
-    		applyZouHeLeft(field, u_in);
-    		applyOutflowRight(field);
-    		resetCornersToRest(field);
+		computeMacroscopic(field, mask.solid);
+		collision(field, config.tau, mask.solid);
+		streaming(field, mask.solid, Fx, Fy);
 
-    		FsumX += Fx;
-    		FsumY += Fy;
+		applyZouHeLeft(field, config.uMax);
+		applyOutflowRight(field);
+		resetCornersToRest(field);
 
-    		if (step % vtkInterval == 0) {
-        		writeVTK(field, step, outputDir);
-    		}
+		FsumX += Fx;
+		FsumY += Fy;
 
-    		if ((step + 1) % coutInterval == 0) {
-        		FmeanX = FsumX / coutInterval;
-        		FmeanY = FsumY / coutInterval;
-
-        		std::cout << "Step " << step + 1
-                 		 << " avg Fx = " << FmeanX
-                 		 << ", avg Fy = " << FmeanY
-                 		 << std::endl;
-
-        		FsumX = 0.0;
-        		FsumY = 0.0;
-    		}
+		if (step % config.vtkInterval == 0) {
+			writeVTK(field, step, config.outputDir);
 		}
+
+		if ((step + 1) % config.coutInterval == 0) {
+			FmeanX = FsumX / config.coutInterval;
+			FmeanY = FsumY / config.coutInterval;
+
+			std::cout << "Step " << step + 1
+				<< " avg Fx = " << FmeanX
+				<< ", avg Fy = " << FmeanY
+				<< std::endl;
+
+			FsumX = 0.0;
+			FsumY = 0.0;
+		}
+	}
 	// Сохраняем последний шаг
-	writeVTK(field, maxSteps, outputDir);
+	writeVTK(field, config.maxSteps, config.outputDir);
 
-	// Вычисляем силу (опционально)
-	std::cout << "Final force: Fx = " << FmeanX << ", Fy = " << FmeanY << std::endl;
-	double rho_in = 1.0;  // плотность на входе (решёточная)
+	SimulationResult result;
+	result.fx = FmeanX;
+	result.fy = FmeanY;
 
-	double Cd = 2.0 * FmeanX / (rho_in * 2 / 3 * u_in * 2 / 3 * u_in * L);
+	double rho_in = config.rho0;
+	result.cd = 2.0 * result.fx / (rho_in * (4.0/9.0) * config.uMax * config.uMax * L);
 
-	std::cout << "Cd = " << Cd << std::endl;
+	std::cout << "Final force: Fx = " << result.fx
+		<< ", Fy = " << result.fy << std::endl;
+	std::cout << "Cd = " << result.cd << std::endl;
 	std::cout << "Simulation finished!" << std::endl;
 	return 0;
 }

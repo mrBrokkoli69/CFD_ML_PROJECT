@@ -1,121 +1,137 @@
 #include "file_io.h"
-#include <filesystem>
+
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
+
 namespace fs = std::filesystem;
 
-
-
-std::string saveMask(const Mask& mask) {  // теперь возвращаем строку
-	std::string filename = getNextMaskFilename();
-
-	std::ofstream file(filename);
-	if (!file.is_open()) {
-		return "";  // пустая строка — ошибка
-	}
-
-	file << mask.WIDTH << " " << mask.HEIGHT << "\n";
-
-	for (int y = 0; y < mask.HEIGHT; y++) {
-		for (int x = 0; x < mask.WIDTH; x++) {
-			file << (mask.isSolid(y, x) ? '1' : '0');
-		}
-		file << "\n";
-	}
-
-	file.close();
-
-	return filename;  // возвращаем имя сохранённого файла
-}
-
-void loadMask(Mask& mask, const std::string& filename) {
-	// Открываем файл для чтения
-	std::ifstream file(filename);
-
-	// Проверяем, открылся ли файл
-	if (!file.is_open()) {
-		return;  // если не открылся — выходим
-	}
-
-	// Читаем размеры
-	int w, h;
-	file >> w >> h;
-
-	// Проверяем, совпадают ли размеры с нашей маской
-	if (w != mask.WIDTH || h != mask.HEIGHT) {
-		file.close();
-		return;  // размеры не совпадают — не загружаем
-	}
-
-	// Читаем все клетки построчно
-	for (int y = 0; y < mask.HEIGHT; y++) {
-		std::string line;
-		file >> line;  // читаем целую строку из файла
-
-		// Обрабатываем каждый символ в строке
-		for (int x = 0; x < mask.WIDTH && x < (int)line.size(); x++) {
-			// Если символ '1' — ставим твёрдое тело, иначе воздух
-			mask.setSolid(y, x, line[x] == '1');
-		}
-	}
-
-	file.close();  // явно закрываем файл
-}
-
-
 std::string getNextMaskFilename() {
-	int maxNum = 0;
-	std::string path = "data/masks/";
+    fs::create_directories("data/masks");
 
-	// Проверяем, существует ли папка, если нет — создаём
-	if (!fs::exists(path)) {
-		fs::create_directories(path);
-	}
+    int maxIndex = 0;
+    for (const auto& entry : fs::directory_iterator("data/masks")) {
+        std::string name = entry.path().filename().string();
 
-	// Проходим по всем файлам в папке
-	for (const auto& entry : fs::directory_iterator(path)) {
-		std::string filename = entry.path().filename().string();
+        if (name.rfind("mask_", 0) == 0 && name.find(".dat") != std::string::npos) {
+            try {
+                int index = std::stoi(name.substr(5, name.find(".dat") - 5));
+                maxIndex = std::max(maxIndex, index);
+            } catch (...) {
+            }
+        }
+    }
 
-		// Проверяем, подходит ли файл под шаблон "mask_XXX.dat"
-		if (filename.rfind("mask_", 0) == 0 && filename.size() > 8) {
-			// Извлекаем число между "mask_" и ".dat"
-			std::string numStr = filename.substr(5, filename.size() - 9);
-
-			// Пробуем преобразовать в число
-			try {
-				int num = std::stoi(numStr);
-				if (num > maxNum) maxNum = num;
-			} catch (...) {
-				// Если не число — игнорируем
-			}
-		}
-	}
-
-	// Формируем имя для нового файла
-	return path + "mask_" + std::to_string(maxNum + 1) + ".dat";
+    return "mask_" + std::to_string(maxIndex + 1) + ".dat";
 }
 
-std::vector<std::string> getMaskList()
-{
-	std::vector<std::string> masks;
-	std::string path = "data/masks/";
-	if ( !(fs::exists(path))) {
-		return masks;
-	}
-
-	for (const auto& entry: fs::directory_iterator(path)) {
-		std::string filename = entry.path().filename().string();
-
-		if(filename.rfind("mask_",0) == 0 && filename.size() > 8 ) {
-			masks.push_back(filename);
-		}
-	}
-
-	std::sort(masks.begin(), masks.end());
-
-	return masks;
+std::string buildMaskPath(const std::string& filename) {
+    return "data/masks/" + filename;
 }
 
+static std::string normalizeMaskFilename(std::string name) {
+    if (name.empty()) {
+        return name;
+    }
 
+    for (char& c : name) {
+        if (c == ' ') {
+            c = '_';
+        }
+    }
+
+    if (name.size() < 4 || name.substr(name.size() - 4) != ".dat") {
+        name += ".dat";
+    }
+
+    return name;
+}
+
+static std::string writeMaskToFile(const Mask& mask, const std::string& filename) {
+    fs::create_directories("data/masks");
+
+    std::string normalized = normalizeMaskFilename(filename);
+    std::string fullPath = buildMaskPath(normalized);
+
+    std::ofstream out(fullPath);
+    if (!out) {
+        return "";
+    }
+
+    out << Mask::WIDTH << " " << Mask::HEIGHT << "\n";
+    for (int y = 0; y < Mask::HEIGHT; ++y) {
+        for (int x = 0; x < Mask::WIDTH; ++x) {
+            out << (mask.cells[y][x] ? '1' : '0');
+        }
+        out << "\n";
+    }
+
+    return fullPath;
+}
+
+std::string saveMask(const Mask& mask) {
+    return writeMaskToFile(mask, getNextMaskFilename());
+}
+
+std::string saveMaskAs(const Mask& mask, const std::string& baseName) {
+    return writeMaskToFile(mask, baseName);
+}
+
+bool loadMask(Mask& mask, const std::string& filename) {
+    std::ifstream in(filename);
+    if (!in) {
+        return false;
+    }
+
+    int width = 0;
+    int height = 0;
+    in >> width >> height;
+
+    if (width != Mask::WIDTH || height != Mask::HEIGHT) {
+        return false;
+    }
+
+    for (int y = 0; y < Mask::HEIGHT; ++y) {
+        std::string row;
+        in >> row;
+
+        if (static_cast<int>(row.size()) != Mask::WIDTH) {
+            return false;
+        }
+
+        for (int x = 0; x < Mask::WIDTH; ++x) {
+            mask.cells[y][x] = (row[x] == '1');
+        }
+    }
+
+    return true;
+}
+
+std::vector<std::string> getMaskList() {
+    std::vector<std::string> masks;
+
+    if (!fs::exists("data/masks")) {
+        return masks;
+    }
+
+    for (const auto& entry : fs::directory_iterator("data/masks")) {
+        if (entry.path().extension() == ".dat") {
+            masks.push_back(entry.path().filename().string());
+        }
+    }
+
+    std::sort(masks.begin(), masks.end());
+    return masks;
+}
+
+bool deleteMaskFile(const std::string& filename) {
+    std::string fullPath = buildMaskPath(filename);
+
+    if (!fs::exists(fullPath)) {
+        return false;
+    }
+
+    return fs::remove(fullPath);
+}

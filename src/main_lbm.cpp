@@ -5,7 +5,6 @@
 #include "post/postprocessing.h"
 
 #include <cmath>
-#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -14,7 +13,10 @@ SimulationConfig createDatRunConfig() {
     SimulationConfig config;
     config.outputDir = "./data/case_runs/mask_case";
 
-    // Эти размеры должны совпадать с размерами маски в .dat
+    // ВАЖНО:
+    // Эти размеры должны совпадать с тем, что реально сохранено editor-ом.
+    // Если editor у тебя ещё в состоянии из загруженных файлов, то там 64 x 32.
+    // Если ты уже локально перевёл editor на 300 x 80, то оставляй 300 x 80.
     config.nx = 300;
     config.ny = 80;
 
@@ -24,17 +26,19 @@ SimulationConfig createDatRunConfig() {
 
     config.maxSteps = 3000;
     config.vtkInterval = 10;
-    config.coutInterval = 500;
+    config.coutInterval = 1000;
 
     return config;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
         SimulationConfig config = createDatRunConfig();
 
-        // Путь к .dat маске, сохранённой редактором
-        const std::string maskPath = "data/masks/mask_8.dat";
+        std::string maskPath = "./mask.dat";
+        if (argc >= 2) {
+            maskPath = argv[1];
+        }
 
         Mask mask = loadMaskFromDat(maskPath);
 
@@ -48,8 +52,7 @@ int main() {
         }
 
         // Пока characteristicLength задаём вручную.
-        // Если это цилиндр радиуса 10, то characteristicLength = 20.
-        // Позже можно будет вычислять его из маски автоматически или задавать через UI.
+        // Для произвольной формы это временное решение.
         double characteristicLength = 20.0;
 
         double nu = CS2 * (config.tau - 0.5);
@@ -58,6 +61,7 @@ int main() {
 
         std::cout << "Loaded mask from: " << maskPath << std::endl;
         std::cout << "Mask size: " << mask.nx << " x " << mask.ny << std::endl;
+        std::cout << "tau   = " << config.tau << std::endl;
         std::cout << "Umax  = " << config.uMax << std::endl;
         std::cout << "Umean = " << uMean << std::endl;
         std::cout << "Re    = " << re << std::endl;

@@ -1,0 +1,2 @@
+case_name,nx,ny,tau,rho0,uMax,characteristic_length,steps_done,fx,fy,avgFx,avgFy,Cd,Cl
+validation_re20,441,84,0.6,1,0.05,20,3000,0.0628099,-0.000613351,0.0644436,-0.00046584,5.79992,-0.0419256

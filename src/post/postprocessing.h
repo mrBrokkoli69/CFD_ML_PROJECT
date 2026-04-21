@@ -7,3 +7,4 @@ double computeLiftCoefficient(double fy, const SimulationConfig& config, double 
 void printSimulationSummary(const SimulationResult& result,
                             const SimulationConfig& config,
                             double characteristicLength);
+

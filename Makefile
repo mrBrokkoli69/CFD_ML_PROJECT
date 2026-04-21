@@ -6,6 +6,7 @@ SRCDIR_EDITOR = src/mask_editor
 SRCDIR_LBM = src/lbm
 SRCDIR_GEOMETRY = src/geometry
 SRCDIR_POST = src/post
+SRCDIR_IO = src/io
 
 
 # Исполняемые файлы
@@ -23,7 +24,8 @@ SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
            src/main_lbm.cpp \
 	   $(SRCDIR_GEOMETRY)/geometry.cpp \
 	   $(SRCDIR_LBM)/lbm_runner.cpp   \
-	   $(SRCDIR_POST)/postprocessing.cpp
+	   $(SRCDIR_POST)/postprocessing.cpp \
+	   $(SRCDIR_IO)/results_io.cpp
 	   
 # Объектные файлы для редактора
 OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)

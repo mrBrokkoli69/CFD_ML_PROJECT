@@ -15,16 +15,16 @@ SimulationConfig createDatRunConfig() {
     config.outputDir = "./data/case_runs/mask_case";
 
     // Эти размеры должны совпадать с размерами маски в .dat
-    config.nx = 80;
-    config.ny = 40;
+    config.nx = 300;
+    config.ny = 80;
 
     config.tau = 0.6;
     config.rho0 = 1.0;
     config.uMax = 0.05;
 
-    config.maxSteps = 5000;
+    config.maxSteps = 3000;
     config.vtkInterval = 10;
-    config.coutInterval = 1000;
+    config.coutInterval = 500;
 
     return config;
 }
@@ -34,7 +34,7 @@ int main() {
         SimulationConfig config = createDatRunConfig();
 
         // Путь к .dat маске, сохранённой редактором
-        const std::string maskPath = "data/masks/mask_6.dat";
+        const std::string maskPath = "data/masks/mask_8.dat";
 
         Mask mask = loadMaskFromDat(maskPath);
 

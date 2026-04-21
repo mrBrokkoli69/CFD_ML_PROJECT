@@ -5,36 +5,50 @@
 #include <iostream>
 
 
-int main() {
-	SimulationConfig config;
-	config.outputDir = "./data/case_runs/test_case";
+SimulationConfig createValidationConfig() {
+    SimulationConfig config;
+    config.outputDir = "../data/case_runs/validation_re20";
 
-	config.nx = 200;
-	config.ny = 100;
-	config.tau = 0.55;
-	config.rho0 = 1.0;
-	config.uMax = 0.08;
+    config.nx = 441;
+    config.ny = 84;
+    config.tau = 0.6;
+    config.rho0 = 1.0;
+    config.uMax = 0.05;
 
-	config.maxSteps = 3000;
-	config.vtkInterval = 10;
-	config.coutInterval = 100;
+    config.maxSteps = 4000;
+    config.vtkInterval = 0;
+    config.coutInterval = 1000;
 
-	int cx = 56;
-	int cy = config.ny / 2;
-	int r = 6;
-
-	double characteristicLength = 2.0 * r;
-	double nu = CS2 * (config.tau - 0.5);
-	double Re = config.uMax * characteristicLength * (2.0/3.0) / nu;
-
-	Mask mask = createEmptyMask(config.nx, config.ny);
-	addCylinder(mask,cx,cy,r);
-
-	std::cout << "Re = " << Re << std::endl;
-
-	SimulationResult result = runCase(config, mask, characteristicLength);
-	printSimulationSummary(result, config, characteristicLength);
-
-	return 0;
-
+    return config;
 }
+
+Mask createValidationMask(const SimulationConfig& config, int& cx, int& cy, int& r) {
+    cx = 40;
+    cy = 41;
+    r = 10;
+
+    Mask mask = createEmptyMask(config.nx, config.ny);
+    addCylinder(mask, cx, cy, r);
+
+    return mask;
+}
+
+
+
+int main() {
+    SimulationConfig config = createValidationConfig();
+
+    int cx = 0;
+    int cy = 0;
+    int r = 0;
+    Mask mask = createValidationMask(config, cx, cy, r);
+
+    double characteristicLength = 2.0 * r;
+
+    SimulationResult result = runCase(config, mask, characteristicLength);
+
+    printSimulationSummary(result, config, characteristicLength);
+
+    return 0;
+}
+

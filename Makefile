@@ -19,7 +19,8 @@ SRCS_EDITOR = $(SRCDIR_EDITOR)/editor.cpp \
 # Файлы для LBM (без editor.cpp!)
 SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
            src/main_lbm.cpp \
-	   $(SRCDIR_GEOMETRY)/geometry.cpp
+	   $(SRCDIR_GEOMETRY)/geometry.cpp \
+	   $(SRCDIR_LBM)/lbm_runner.cpp
 	   
 # Объектные файлы для редактора
 OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)

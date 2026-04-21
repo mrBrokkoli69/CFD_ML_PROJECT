@@ -2,8 +2,8 @@
 #define EDITOR_H
 
 struct Mask {
-    static const int WIDTH = 64;
-    static const int HEIGHT = 32;
+    static const int WIDTH = 80;
+    static const int HEIGHT = 40;
     
     bool cells[HEIGHT][WIDTH];
     

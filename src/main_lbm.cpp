@@ -1,114 +1,81 @@
-#include "geometry/geometry.h"
 #include "io/results_io.h"
 #include "lbm/lbm_core.h"
 #include "lbm/lbm_runner.h"
+#include "mask_editor/mask_loader.h"
 #include "post/postprocessing.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
-#include <vector>
+#include <stdexcept>
+#include <string>
 
-SimulationConfig createValidationConfigRe20() {
+SimulationConfig createDatRunConfig() {
     SimulationConfig config;
-    config.outputDir = "./data/case_runs/validation_re20";
+    config.outputDir = "./data/case_runs/mask_case";
 
-    config.nx = 441;
-    config.ny = 84;
+    // Эти размеры должны совпадать с размерами маски в .dat
+    config.nx = 80;
+    config.ny = 40;
+
     config.tau = 0.6;
     config.rho0 = 1.0;
     config.uMax = 0.05;
 
-    config.maxSteps = 3000;
-    config.vtkInterval = 0;
+    config.maxSteps = 5000;
+    config.vtkInterval = 10;
     config.coutInterval = 1000;
 
     return config;
 }
-
-SimulationConfig createValidationConfigVariant() {
-    SimulationConfig config;
-    config.outputDir = "./data/case_runs/validation_variant";
-
-    config.nx = 441;
-    config.ny = 84;
-    config.tau = 0.6;
-    config.rho0 = 1.0;
-    config.uMax = 0.04;
-
-    config.maxSteps = 10000;
-    config.vtkInterval = 0;
-    config.coutInterval = 1000;
-
-    return config;
-}
-
-Mask createCylinderValidationMask(const SimulationConfig& config, int& cx, int& cy, int& r) {
-    cx = 40;
-    cy = 41;
-    r = 10;
-
-    Mask mask = createEmptyMask(config.nx, config.ny);
-    addCylinder(mask, cx, cy, r);
-
-    return mask;
-}
-
-struct BatchCase {
-    std::string caseName;
-    SimulationConfig config;
-};
 
 int main() {
-    std::vector<BatchCase> cases = {
-        {"validation_re20", createValidationConfigRe20()},
-        {"validation_variant", createValidationConfigVariant()}
-    };
+    try {
+        SimulationConfig config = createDatRunConfig();
 
-    const std::string csvPath = "./data/results/simulation_results.csv";
+        // Путь к .dat маске, сохранённой редактором
+        const std::string maskPath = "data/masks/mask_6.dat";
 
-    for (const BatchCase& batchCase : cases) {
-        int cx = 0;
-        int cy = 0;
-        int r = 0;
+        Mask mask = loadMaskFromDat(maskPath);
 
-        Mask mask = createCylinderValidationMask(batchCase.config, cx, cy, r);
+        if (mask.nx != config.nx || mask.ny != config.ny) {
+            throw std::runtime_error(
+                "Loaded mask size does not match config: mask = " +
+                std::to_string(mask.nx) + "x" + std::to_string(mask.ny) +
+                ", config = " +
+                std::to_string(config.nx) + "x" + std::to_string(config.ny)
+            );
+        }
 
-        double characteristicLength = 2.0 * r;
-        double nu = CS2 * (batchCase.config.tau - 0.5);
-        double uMean = (2.0 / 3.0) * batchCase.config.uMax;
+        // Пока characteristicLength задаём вручную.
+        // Если это цилиндр радиуса 10, то characteristicLength = 20.
+        // Позже можно будет вычислять его из маски автоматически или задавать через UI.
+        double characteristicLength = 20.0;
+
+        double nu = CS2 * (config.tau - 0.5);
+        double uMean = (2.0 / 3.0) * config.uMax;
         double re = uMean * characteristicLength / nu;
 
-        std::cout << "\n==============================\n";
-        std::cout << "Running case: " << batchCase.caseName << std::endl;
-        std::cout << "Umax  = " << batchCase.config.uMax << std::endl;
+        std::cout << "Loaded mask from: " << maskPath << std::endl;
+        std::cout << "Mask size: " << mask.nx << " x " << mask.ny << std::endl;
+        std::cout << "Umax  = " << config.uMax << std::endl;
         std::cout << "Umean = " << uMean << std::endl;
         std::cout << "Re    = " << re << std::endl;
 
-        SimulationResult result = runCase(batchCase.config, mask, characteristicLength);
+        SimulationResult result = runCase(config, mask, characteristicLength);
 
-        printSimulationSummary(result, batchCase.config, characteristicLength);
+        printSimulationSummary(result, config, characteristicLength);
 
-        appendResultToCSV(csvPath,
-                          batchCase.caseName,
-                          batchCase.config,
+        appendResultToCSV("./data/results/simulation_results.csv",
+                          "dat_mask_case",
+                          config,
                           result,
                           characteristicLength);
 
-        if (batchCase.caseName == "validation_re20") {
-            double cd = computeDragCoefficient(result.avgFx, batchCase.config, characteristicLength);
-            double cdRef = 5.55;
-            double tolerance = 0.15;
-
-            if (std::abs(cd - cdRef) > tolerance) {
-                std::cerr << "Validation FAILED for " << batchCase.caseName
-                          << ": Cd = " << cd
-                          << ", expected around " << cdRef
-                          << " +/- " << tolerance << std::endl;
-            }
-
-            std::cout << "Validation PASSED for " << batchCase.caseName << std::endl;
-        }
+        return 0;
     }
-
-    return 0;
+    catch (const std::exception& e) {
+        std::cerr << "ERROR: " << e.what() << std::endl;
+        return 1;
+    }
 }

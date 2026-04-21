@@ -25,7 +25,8 @@ SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
 	   $(SRCDIR_GEOMETRY)/geometry.cpp \
 	   $(SRCDIR_LBM)/lbm_runner.cpp   \
 	   $(SRCDIR_POST)/postprocessing.cpp \
-	   $(SRCDIR_IO)/results_io.cpp
+	   $(SRCDIR_IO)/results_io.cpp\
+           $(SRCDIR_EDITOR)/mask_loader.cpp	   
 	   
 # Объектные файлы для редактора
 OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)

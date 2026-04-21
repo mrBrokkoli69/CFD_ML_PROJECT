@@ -67,7 +67,9 @@ struct SimulationConfig {
 struct SimulationResult {
     double fx;
     double fy;
-    double cd;
+    double avgFx;
+    double avgFy;
+    int stepsDone;
 };
 
 struct Mask {

@@ -1,7 +1,7 @@
 #include "lbm/lbm_core.h"
 #include "geometry/geometry.h"
 #include "lbm/lbm_runner.h"
-
+#include "post/postprocessing.h"
 #include <iostream>
 
 
@@ -33,11 +33,7 @@ int main() {
 	std::cout << "Re = " << Re << std::endl;
 
 	SimulationResult result = runCase(config, mask, characteristicLength);
-
-	std::cout << "Final force: Fx = " << result.fx
-		<< ", Fy = " << result.fy << std::endl;
-	std::cout << "Cd = " << result.cd << std::endl;
-	std::cout << "Simulation finished!" << std::endl;
+	printSimulationSummary(result, config, characteristicLength);
 
 	return 0;
 

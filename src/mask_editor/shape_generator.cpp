@@ -1,7 +1,7 @@
 #include "shape_generator.h"
 #include <math.h>
 
-void drawCircle(Mask& mask, int cx, int cy, int r) {
+void drawCircle(EditorMask& mask, int cx, int cy, int r) {
     int x = 0;
     int y = r;
     int d = 3 - 2 * r;  // параметр решения (ошибка)
@@ -52,7 +52,7 @@ void drawCircle(Mask& mask, int cx, int cy, int r) {
     }
 }
 
-void drawRectangle(Mask& mask, int x1, int y1, int x2, int y2) {
+void drawRectangle(EditorMask& mask, int x1, int y1, int x2, int y2) {
     // Упорядочиваем координаты (чтобы x1 <= x2, y1 <= y2)
     if (x1 > x2) {
         int temp = x1;
@@ -73,7 +73,7 @@ void drawRectangle(Mask& mask, int x1, int y1, int x2, int y2) {
     }
 }
 
-void drawEllipse(Mask& mask, int cx, int cy, int rx, int ry) {
+void drawEllipse(EditorMask& mask, int cx, int cy, int rx, int ry) {
     int x = 0;
     int y = ry;
     
@@ -140,7 +140,7 @@ void drawEllipse(Mask& mask, int cx, int cy, int rx, int ry) {
 
 
 
-void drawNACA0012(Mask& mask, int cx, int cy, int chord) {
+void drawNACA0012(EditorMask& mask, int cx, int cy, int chord) {
     // chord — длина хорды в пикселях (сколько точек по X)
     for (int x = 0; x <= chord; x++) {
         // Нормализованная координата от 0 до 1
@@ -172,7 +172,7 @@ void drawNACA0012(Mask& mask, int cx, int cy, int chord) {
 }
 
 
-void drawNACA2412(Mask& mask, int cx, int cy, int chord) {
+void drawNACA2412(EditorMask& mask, int cx, int cy, int chord) {
     // Параметры NACA 2412
     double m = 0.02;  // максимальная кривизна (2%)
     double p = 0.4;   // положение макс. кривизны (40% от носка)

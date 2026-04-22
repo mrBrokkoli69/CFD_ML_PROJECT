@@ -49,7 +49,7 @@ static std::string normalizeMaskFilename(std::string name) {
     return name;
 }
 
-static std::string writeMaskToFile(const Mask& mask, const std::string& filename) {
+static std::string writeMaskToFile(const EditorMask& mask, const std::string& filename) {
     fs::create_directories("data/masks");
 
     std::string normalized = normalizeMaskFilename(filename);
@@ -60,9 +60,9 @@ static std::string writeMaskToFile(const Mask& mask, const std::string& filename
         return "";
     }
 
-    out << Mask::WIDTH << " " << Mask::HEIGHT << "\n";
-    for (int y = 0; y < Mask::HEIGHT; ++y) {
-        for (int x = 0; x < Mask::WIDTH; ++x) {
+    out << EditorMask::WIDTH << " " << EditorMask::HEIGHT << "\n";
+    for (int y = 0; y < EditorMask::HEIGHT; ++y) {
+        for (int x = 0; x < EditorMask::WIDTH; ++x) {
             out << (mask.cells[y][x] ? '1' : '0');
         }
         out << "\n";
@@ -71,15 +71,15 @@ static std::string writeMaskToFile(const Mask& mask, const std::string& filename
     return fullPath;
 }
 
-std::string saveMask(const Mask& mask) {
+std::string saveMask(const EditorMask& mask) {
     return writeMaskToFile(mask, getNextMaskFilename());
 }
 
-std::string saveMaskAs(const Mask& mask, const std::string& baseName) {
+std::string saveMaskAs(const EditorMask& mask, const std::string& baseName) {
     return writeMaskToFile(mask, baseName);
 }
 
-bool loadMask(Mask& mask, const std::string& filename) {
+bool loadMask(EditorMask& mask, const std::string& filename) {
     std::ifstream in(filename);
     if (!in) {
         return false;
@@ -89,19 +89,19 @@ bool loadMask(Mask& mask, const std::string& filename) {
     int height = 0;
     in >> width >> height;
 
-    if (width != Mask::WIDTH || height != Mask::HEIGHT) {
+    if (width != EditorMask::WIDTH || height != EditorMask::HEIGHT) {
         return false;
     }
 
-    for (int y = 0; y < Mask::HEIGHT; ++y) {
+    for (int y = 0; y < EditorMask::HEIGHT; ++y) {
         std::string row;
         in >> row;
 
-        if (static_cast<int>(row.size()) != Mask::WIDTH) {
+        if (static_cast<int>(row.size()) != EditorMask::WIDTH) {
             return false;
         }
 
-        for (int x = 0; x < Mask::WIDTH; ++x) {
+        for (int x = 0; x < EditorMask::WIDTH; ++x) {
             mask.cells[y][x] = (row[x] == '1');
         }
     }

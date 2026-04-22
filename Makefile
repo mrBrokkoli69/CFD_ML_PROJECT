@@ -1,64 +1,89 @@
 CXX = g++
 CXXFLAGS = -Wall -Wextra -g3 -std=c++17
 
-# Папки с исходниками
-SRCDIR_EDITOR = src/mask_editor
+# Папки
 SRCDIR_LBM = src/lbm
-SRCDIR_GEOMETRY = src/geometry
-SRCDIR_POST = src/post
+SRCDIR_EDITOR = src/mask_editor
 SRCDIR_IO = src/io
+SRCDIR_POST = src/post
+SRCDIR_GEOMETRY = src/geometry
+SRCDIR_APPS = src
 
+# Итоговые приложения
+TARGET_INTERACTIVE = Interactive_app
+TARGET_VALIDATION = Validation_app
 
-# Исполняемые файлы
-TARGET_EDITOR = mask_editor
-TARGET_LBM = lbm_test
+# -------------------------
+# Общие solver-файлы
+# -------------------------
+COMMON_SOLVER_SRCS = \
+	$(SRCDIR_LBM)/lbm_core.cpp \
+	$(SRCDIR_LBM)/lbm_runner.cpp \
+	$(SRCDIR_POST)/postprocessing.cpp \
+	$(SRCDIR_IO)/results_io.cpp \
+	$(SRCDIR_IO)/case_io.cpp \
+	$(SRCDIR_EDITOR)/mask_loader.cpp
 
-# Файлы для редактора
-SRCS_EDITOR = $(SRCDIR_EDITOR)/editor.cpp \
-	      $(SRCDIR_EDITOR)/flood_fill.cpp \
-	      $(SRCDIR_EDITOR)/file_io.cpp \
-	      $(SRCDIR_EDITOR)/shape_generator.cpp \
-	      $(SRCDIR_IO)/case_io.cpp
+# -------------------------
+# Файлы interactive app
+# -------------------------
+INTERACTIVE_EDITOR_SRCS = \
+	$(SRCDIR_EDITOR)/editor.cpp \
+	$(SRCDIR_EDITOR)/file_io.cpp \
+	$(SRCDIR_EDITOR)/flood_fill.cpp \
+	$(SRCDIR_EDITOR)/shape_generator.cpp
 
-# Файлы для LBM (без editor.cpp!)
-SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
-	   src/main_lbm.cpp \
-	   $(SRCDIR_GEOMETRY)/geometry.cpp \
-	   $(SRCDIR_LBM)/lbm_runner.cpp   \
-	   $(SRCDIR_POST)/postprocessing.cpp \
-	   $(SRCDIR_IO)/results_io.cpp \
-	   $(SRCDIR_EDITOR)/mask_loader.cpp \
-	   $(SRCDIR_IO)/case_io.cpp
+INTERACTIVE_APP_SRCS = \
+	$(SRCDIR_APPS)/interactive_main.cpp \
+	$(SRCDIR_APPS)/main_lbm.cpp \
+	$(INTERACTIVE_EDITOR_SRCS) \
+	$(COMMON_SOLVER_SRCS)
 
-# Объектные файлы для редактора
-OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)
+INTERACTIVE_APP_OBJS = $(INTERACTIVE_APP_SRCS:.cpp=.o)
 
-# Объектные файлы для LBM
-OBJS_LBM = $(SRCS_LBM:.cpp=.o)
+# -------------------------
+# Заранее прописываем, что пойдёт в validation app
+# (пока можно не собирать, но список уже готов)
+# -------------------------
+VALIDATION_APP_SRCS = \
+	$(SRCDIR_APPS)/validation_main.cpp \
+	$(SRCDIR_GEOMETRY)/geometry.cpp \
+	$(COMMON_SOLVER_SRCS)
 
-# Правило по умолчанию
-all: $(TARGET_EDITOR) $(TARGET_LBM)
+VALIDATION_APP_OBJS = $(VALIDATION_APP_SRCS:.cpp=.o)
 
-# Сборка редактора
-$(TARGET_EDITOR): $(OBJS_EDITOR)
-	$(CXX) $(OBJS_EDITOR) -o $(TARGET_EDITOR) -lncurses
+# -------------------------
+# По умолчанию собираем только interactive app
+# -------------------------
+all: $(TARGET_INTERACTIVE)
 
-# Сборка LBM-теста
-$(TARGET_LBM): $(OBJS_LBM)
-	$(CXX) $(OBJS_LBM) -o $(TARGET_LBM) -lncurses
+# -------------------------
+# Interactive app
+# -------------------------
+$(TARGET_INTERACTIVE): $(INTERACTIVE_APP_OBJS)
+	$(CXX) $(INTERACTIVE_APP_OBJS) -o $(TARGET_INTERACTIVE) -lncurses
 
-# Правило компиляции для .cpp -> .o
+# -------------------------
+# Validation app
+# Пока можно не вызывать, но цель уже готова
+# -------------------------
+$(TARGET_VALIDATION): $(VALIDATION_APP_OBJS)
+	$(CXX) $(VALIDATION_APP_OBJS) -o $(TARGET_VALIDATION)
+
+# -------------------------
+# Общее правило компиляции
+# -------------------------
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Очистка
+# -------------------------
+# Утилиты
+# -------------------------
 clean:
-	rm -f $(OBJS_EDITOR) $(OBJS_LBM) $(TARGET_EDITOR) $(TARGET_LBM)
+	rm -f $(INTERACTIVE_APP_OBJS) $(VALIDATION_APP_OBJS) $(TARGET_INTERACTIVE) $(TARGET_VALIDATION)
 
-# Запуск редактора
-run: $(TARGET_EDITOR)
-	./$(TARGET_EDITOR)
+run: $(TARGET_INTERACTIVE)
+	./$(TARGET_INTERACTIVE)
 
-# Запуск LBM-теста
-run_lbm: $(TARGET_LBM)
-	./$(TARGET_LBM)
+run_solver_example: $(TARGET_INTERACTIVE)
+	./$(TARGET_INTERACTIVE) --solver ./mask.dat 0.6 0.05 1.0 3000 1000 0 20.0

@@ -2,12 +2,28 @@
 
 #include <iostream>
 
-double computeDragCoefficient(double fx, const SimulationConfig& config, double characteristicLength) {
-    return 2.0 * fx / (config.rho0 *(4.0/9.0) *  config.uMax * config.uMax * characteristicLength);
+double computeMeanInletVelocity(const SimulationConfig& config) {
+    return (2.0 / 3.0) * config.uMax;
 }
 
-double computeLiftCoefficient(double fy, const SimulationConfig& config, double characteristicLength) {
-    return 2.0 * fy / (config.rho0 * (4.0/9.0) * config.uMax * config.uMax * characteristicLength);
+double computeReynoldsNumber(const SimulationConfig& config, double characteristicLength) {
+    double nu = CS2 * (config.tau - 0.5);
+    double uMean = computeMeanInletVelocity(config);
+    return uMean * characteristicLength / nu;
+}
+
+double computeDragCoefficient(double fx,
+                              const SimulationConfig& config,
+                              double characteristicLength) {
+    double uMean = computeMeanInletVelocity(config);
+    return 2.0 * fx / (config.rho0 * uMean * uMean * characteristicLength);
+}
+
+double computeLiftCoefficient(double fy,
+                              const SimulationConfig& config,
+                              double characteristicLength) {
+    double uMean = computeMeanInletVelocity(config);
+    return 2.0 * fy / (config.rho0 * uMean * uMean * characteristicLength);
 }
 
 void printSimulationSummary(const SimulationResult& result,

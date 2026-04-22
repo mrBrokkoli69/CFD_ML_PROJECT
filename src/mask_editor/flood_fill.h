@@ -3,11 +3,7 @@
 
 #include "editor.h"
 
-
-void floodFill(Mask& mask, int startY, int startX, bool targetValue, bool newValue);
-
-
-void clearMask(Mask& mask);
-
+void floodFill(EditorMask& mask, int startY, int startX, bool targetValue, bool newValue);
+void clearMask(EditorMask& mask);
 
 #endif

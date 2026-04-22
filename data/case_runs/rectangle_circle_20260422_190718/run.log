@@ -1,0 +1,18 @@
+Case name: rectangle_circle_20260422_190718
+Case dir : data/case_runs/rectangle_circle_20260422_190718
+Mask path: data/masks/rectangle_circle.dat
+Mask size: 300 x 80
+tau   = 0.6
+rho0  = 1
+Umax  = 0.05
+Umean = 0.0333333
+Re    = 20
+maxSteps        = 5000
+coutInterval    = 1000
+vtkInterval     = 10
+charLength      = 20
+Starting LBM simulation...
+Grid: 300 x 80
+tau = 0.6, uMax = 0.05
+Step 1000 avg Fx = 0.0867796, avg Fy = -0.00463157
+Step 2000 avg Fx = 0.0617592, avg Fy = -0.00490604

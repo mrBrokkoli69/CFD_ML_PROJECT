@@ -15,19 +15,21 @@ TARGET_LBM = lbm_test
 
 # Файлы для редактора
 SRCS_EDITOR = $(SRCDIR_EDITOR)/editor.cpp \
-              $(SRCDIR_EDITOR)/flood_fill.cpp \
-              $(SRCDIR_EDITOR)/file_io.cpp \
-              $(SRCDIR_EDITOR)/shape_generator.cpp
+	      $(SRCDIR_EDITOR)/flood_fill.cpp \
+	      $(SRCDIR_EDITOR)/file_io.cpp \
+	      $(SRCDIR_EDITOR)/shape_generator.cpp \
+	      $(SRCDIR_IO)/case_io.cpp
 
 # Файлы для LBM (без editor.cpp!)
 SRCS_LBM = $(SRCDIR_LBM)/lbm_core.cpp \
-           src/main_lbm.cpp \
+	   src/main_lbm.cpp \
 	   $(SRCDIR_GEOMETRY)/geometry.cpp \
 	   $(SRCDIR_LBM)/lbm_runner.cpp   \
 	   $(SRCDIR_POST)/postprocessing.cpp \
-	   $(SRCDIR_IO)/results_io.cpp\
-           $(SRCDIR_EDITOR)/mask_loader.cpp	   
-	   
+	   $(SRCDIR_IO)/results_io.cpp \
+	   $(SRCDIR_EDITOR)/mask_loader.cpp \
+	   $(SRCDIR_IO)/case_io.cpp
+
 # Объектные файлы для редактора
 OBJS_EDITOR = $(SRCS_EDITOR:.cpp=.o)
 

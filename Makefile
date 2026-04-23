@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -g3 -std=c++17
+CXXFLAGS = -Wall -Wextra -g3 -std=c++17 -fopenmp
 
 # Папки
 SRCDIR_LBM = src/lbm
@@ -61,14 +61,14 @@ all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION)
 # Interactive app
 # -------------------------
 $(TARGET_INTERACTIVE): $(INTERACTIVE_APP_OBJS)
-	$(CXX) $(INTERACTIVE_APP_OBJS) -o $(TARGET_INTERACTIVE) -lncurses
+	$(CXX) $(INTERACTIVE_APP_OBJS) -o $(TARGET_INTERACTIVE) -lncurses -fopenmp
 
 # -------------------------
 # Validation app
 # Пока можно не вызывать, но цель уже готова
 # -------------------------
 $(TARGET_VALIDATION): $(VALIDATION_APP_OBJS)
-	$(CXX) $(VALIDATION_APP_OBJS) -o $(TARGET_VALIDATION)
+	$(CXX) $(VALIDATION_APP_OBJS) -o $(TARGET_VALIDATION) -fopenmp
 
 # -------------------------
 # Общее правило компиляции

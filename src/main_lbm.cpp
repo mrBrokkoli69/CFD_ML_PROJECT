@@ -21,7 +21,7 @@ int runSolverMode(int argc, char* argv[]) {
 		CasePaths casePaths = createCasePaths(maskPath);
 		config.outputDir = casePaths.caseDir;
 
-		// ScopedCaseLogger logger(casePaths.logPath);
+		ScopedCaseLogger logger(casePaths.logPath);
 		std::cout << "[DBG] entered solver mode" << std::endl;
 
 		Mask mask = loadMaskFromDat(maskPath);

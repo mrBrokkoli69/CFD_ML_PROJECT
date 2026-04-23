@@ -4,6 +4,12 @@
 #include <sstream>
 #include <iostream>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+
+
 LBMField::LBMField(int nx_, int ny_) : nx(nx_), ny(ny_) {
 	f.resize(Q);
 
@@ -23,7 +29,7 @@ void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& ma
 {
 	int nx = field.nx;
 	int ny = field.ny;
-
+	#pragma omp parallel for collapse(2)
 	for(int i = 0; i < ny; i++) {
 		for(int j = 0; j < nx; j++) {
 			if(mask[i][j]) {
@@ -79,12 +85,11 @@ void collision(LBMField& field, double tau,const std::vector<std::vector<bool>>&
 	int nx = field.nx;
 	int ny = field.ny;
 
-	double feq[Q];
-
+	#pragma omp parallel for collapse(2)
 	for(int y = 0; y < ny; y++) {
 		for(int x = 0; x < nx; x++) {
 			if(mask[y][x]) continue;
-
+			double feq[Q];
 			double rho = field.rho[y][x];
 			double ux = field.ux[y][x];
 			double uy = field.uy[y][x];
@@ -105,7 +110,7 @@ void collision(LBMField& field, double tau,const std::vector<std::vector<bool>>&
 void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask, double& Fx, double& Fy) {
 	int nx = field.nx;
 	int ny = field.ny;
-	
+
 
 	const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
@@ -264,7 +269,7 @@ void applyOutflowRight(LBMField& field) {
 		equilibrium(feq_f, rho_f, ux_f, uy_f);
 
 		for (int i = 0; i < Q; ++i) {
-    			field.f[i][y][x] = feq_b[i] + (field.f[i][y][x - 1] - feq_f[i]);
+			field.f[i][y][x] = feq_b[i] + (field.f[i][y][x - 1] - feq_f[i]);
 		}
 	}
 }

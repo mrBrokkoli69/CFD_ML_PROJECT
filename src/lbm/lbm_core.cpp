@@ -29,7 +29,7 @@ void computeMacroscopic(LBMField& field,const std::vector<std::vector<bool>>& ma
 {
 	int nx = field.nx;
 	int ny = field.ny;
-	#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
 	for(int i = 0; i < ny; i++) {
 		for(int j = 0; j < nx; j++) {
 			if(mask[i][j]) {
@@ -85,7 +85,7 @@ void collision(LBMField& field, double tau,const std::vector<std::vector<bool>>&
 	int nx = field.nx;
 	int ny = field.ny;
 
-	#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2)
 	for(int y = 0; y < ny; y++) {
 		for(int x = 0; x < nx; x++) {
 			if(mask[y][x]) continue;
@@ -111,56 +111,50 @@ void streaming(LBMField& field, const std::vector<std::vector<bool>>& mask, doub
 	int nx = field.nx;
 	int ny = field.ny;
 
-
 	const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
-	std::vector<std::vector<std::vector<double>>> f_temp = field.f;
+	std::vector<std::vector<std::vector<double>>> f_old = field.f;
+	std::vector<std::vector<std::vector<double>>> f_new = field.f;
 
+	Fx = 0.0;
+	Fy = 0.0;
 
+#pragma omp parallel for collapse(2) reduction(+:Fx,Fy)
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
 
-	for(int i = 0; i < Q; i++) {
-		for(int y = 0 ; y < ny; y++) {
-			for(int x = 0; x < nx; x++) {
-				field.f[i][y][x] = 0;
-
-
-			}
-		}
-
-	}
-
-	for(int i = 0; i < Q; i++) {
-		for(int y = 0 ; y < ny; y++) {
-			for(int x = 0; x < nx; x++) {
-				if(mask[y][x]) continue;
-
-				int nx_next = x + cx[i];
-				int ny_next = y + cy[i];
-
-				int opp = opposite[i];
-
-				if (ny_next < 0 || ny_next >= ny) {
-					field.f[opp][y][x] += f_temp[i][y][x];
+			if (mask[y][x]) {
+				for (int i = 0; i < Q; i++) {
+					f_new[i][y][x] = f_old[i][y][x];
 				}
-				else if (nx_next >= 0 && nx_next < nx) {
-					if (mask[ny_next][nx_next]) {
-						field.f[opp][y][x] += f_temp[i][y][x];
-						Fx += 2.0 * f_temp[i][y][x] * cx[i];
-						Fy += 2.0 * f_temp[i][y][x] * cy[i]; 
-					} else {
-						field.f[i][ny_next][nx_next] += f_temp[i][y][x];
+				continue;
+			}
+
+			for (int i = 0; i < Q; i++) {
+				int src_x = x - cx[i];
+				int src_y = y - cy[i];
+
+				if (src_y < 0 || src_y >= ny) {
+					f_new[i][y][x] = f_old[opposite[i]][y][x];
+				}
+				else if (src_x >= 0 && src_x < nx) {
+					if (mask[src_y][src_x]) {
+						f_new[i][y][x] = f_old[opposite[i]][y][x];
+						Fx += 2.0 * f_old[opposite[i]][y][x] * cx[opposite[i]];
+						Fy += 2.0 * f_old[opposite[i]][y][x] * cy[opposite[i]];
+					}
+					else {
+						f_new[i][y][x] = f_old[i][src_y][src_x];
 					}
 				}
-
+				else {
+					f_new[i][y][x] = 0.0;
+				}
 			}
 		}
-
-
-
-
-
 	}
 
+	field.f.swap(f_new);
 }
 
 

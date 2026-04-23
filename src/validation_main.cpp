@@ -19,7 +19,7 @@ SimulationConfig createValidationConfig() {
 	config.uMax = 0.05;
 
 	config.maxSteps = 5000;
-	config.vtkInterval = 10;
+	config.vtkInterval = 0;
 	config.coutInterval = 1000;
 
 	config.outputDir = "./data/case_runs/val_case";

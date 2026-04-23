@@ -55,7 +55,7 @@ VALIDATION_APP_OBJS = $(VALIDATION_APP_SRCS:.cpp=.o)
 # -------------------------
 # По умолчанию собираем только interactive app
 # -------------------------
-all: $(TARGET_INTERACTIVE)
+all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION)
 
 # -------------------------
 # Interactive app

@@ -1,5 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -Wextra -g3 -std=c++17 -fopenmp
+LDFLAGS = -fopenmp
 
 # Папки
 SRCDIR_LBM = src/lbm
@@ -12,6 +13,7 @@ SRCDIR_APPS = src
 # Итоговые приложения
 TARGET_INTERACTIVE = Interactive_app
 TARGET_VALIDATION = Validation_app
+TARGET_DATASET = Dataset_generator
 
 # -------------------------
 # Общие solver-файлы
@@ -42,8 +44,7 @@ INTERACTIVE_APP_SRCS = \
 INTERACTIVE_APP_OBJS = $(INTERACTIVE_APP_SRCS:.cpp=.o)
 
 # -------------------------
-# Заранее прописываем, что пойдёт в validation app
-# (пока можно не собирать, но список уже готов)
+# Validation app
 # -------------------------
 VALIDATION_APP_SRCS = \
 	$(SRCDIR_APPS)/validation_main.cpp \
@@ -53,22 +54,37 @@ VALIDATION_APP_SRCS = \
 VALIDATION_APP_OBJS = $(VALIDATION_APP_SRCS:.cpp=.o)
 
 # -------------------------
-# По умолчанию собираем только interactive app
+# Dataset generator
 # -------------------------
-all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION)
+DATASET_APP_SRCS = \
+	$(SRCDIR_APPS)/dataset_main.cpp \
+	$(SRCDIR_EDITOR)/shape_generator.cpp \
+	$(COMMON_SOLVER_SRCS)
+
+DATASET_APP_OBJS = $(DATASET_APP_SRCS:.cpp=.o)
+
+# -------------------------
+# По умолчанию собираем все приложения
+# -------------------------
+all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET)
 
 # -------------------------
 # Interactive app
 # -------------------------
 $(TARGET_INTERACTIVE): $(INTERACTIVE_APP_OBJS)
-	$(CXX) $(INTERACTIVE_APP_OBJS) -o $(TARGET_INTERACTIVE) -lncurses -fopenmp
+	$(CXX) $(INTERACTIVE_APP_OBJS) -o $(TARGET_INTERACTIVE) -lncurses $(LDFLAGS)
 
 # -------------------------
 # Validation app
-# Пока можно не вызывать, но цель уже готова
 # -------------------------
 $(TARGET_VALIDATION): $(VALIDATION_APP_OBJS)
-	$(CXX) $(VALIDATION_APP_OBJS) -o $(TARGET_VALIDATION) -fopenmp
+	$(CXX) $(VALIDATION_APP_OBJS) -o $(TARGET_VALIDATION) $(LDFLAGS)
+
+# -------------------------
+# Dataset generator
+# -------------------------
+$(TARGET_DATASET): $(DATASET_APP_OBJS)
+	$(CXX) $(DATASET_APP_OBJS) -o $(TARGET_DATASET) $(LDFLAGS)
 
 # -------------------------
 # Общее правило компиляции
@@ -80,7 +96,8 @@ $(TARGET_VALIDATION): $(VALIDATION_APP_OBJS)
 # Утилиты
 # -------------------------
 clean:
-	rm -f $(INTERACTIVE_APP_OBJS) $(VALIDATION_APP_OBJS) $(TARGET_INTERACTIVE) $(TARGET_VALIDATION)
+	rm -f $(INTERACTIVE_APP_OBJS) $(VALIDATION_APP_OBJS) $(DATASET_APP_OBJS) \
+	      $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET)
 
 run: $(TARGET_INTERACTIVE)
 	./$(TARGET_INTERACTIVE)

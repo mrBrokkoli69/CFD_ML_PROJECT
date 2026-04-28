@@ -1,1 +1,2 @@
 case_name,nx,ny,tau,rho0,uMax,characteristic_length,steps_done,fx,fy,avgFx,avgFy,Cd,Cl
+ellipse_20260424_225938,300,80,0.6,1,0.05,20,3000,4.36317,-0.528236,3.70825,-0.472318,333.742,-42.5086

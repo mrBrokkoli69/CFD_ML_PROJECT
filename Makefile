@@ -9,11 +9,13 @@ SRCDIR_IO = src/io
 SRCDIR_POST = src/post
 SRCDIR_GEOMETRY = src/geometry
 SRCDIR_APPS = src
+SRCDIR_ML = src/ml
 
 # Итоговые приложения
 TARGET_INTERACTIVE = Interactive_app
 TARGET_VALIDATION = Validation_app
 TARGET_DATASET = Dataset_generator
+TARGET_MLP = MLP_app
 
 # -------------------------
 # Общие solver-файлы
@@ -64,9 +66,19 @@ DATASET_APP_SRCS = \
 DATASET_APP_OBJS = $(DATASET_APP_SRCS:.cpp=.o)
 
 # -------------------------
+# MLP app
+# -------------------------
+MLP_APP_SRCS = \
+	$(SRCDIR_ML)/dataset.cpp \
+	$(SRCDIR_ML)/mlp.cpp \
+	$(SRCDIR_APPS)/ml_main.cpp
+
+MLP_APP_OBJS = $(MLP_APP_SRCS:.cpp=.o)
+
+# -------------------------
 # По умолчанию собираем все приложения
 # -------------------------
-all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET)
+all: $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET) $(TARGET_MLP)
 
 # -------------------------
 # Interactive app
@@ -87,6 +99,12 @@ $(TARGET_DATASET): $(DATASET_APP_OBJS)
 	$(CXX) $(DATASET_APP_OBJS) -o $(TARGET_DATASET) $(LDFLAGS)
 
 # -------------------------
+# MLP app
+# -------------------------
+$(TARGET_MLP): $(MLP_APP_OBJS)
+	$(CXX) $(MLP_APP_OBJS) -o $(TARGET_MLP) $(LDFLAGS)
+
+# -------------------------
 # Общее правило компиляции
 # -------------------------
 %.o: %.cpp
@@ -96,11 +114,14 @@ $(TARGET_DATASET): $(DATASET_APP_OBJS)
 # Утилиты
 # -------------------------
 clean:
-	rm -f $(INTERACTIVE_APP_OBJS) $(VALIDATION_APP_OBJS) $(DATASET_APP_OBJS) \
-	      $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET)
+	rm -f $(INTERACTIVE_APP_OBJS) $(VALIDATION_APP_OBJS) $(DATASET_APP_OBJS) $(MLP_APP_OBJS) \
+	      $(TARGET_INTERACTIVE) $(TARGET_VALIDATION) $(TARGET_DATASET) $(TARGET_MLP)
 
 run: $(TARGET_INTERACTIVE)
 	./$(TARGET_INTERACTIVE)
 
 run_solver_example: $(TARGET_INTERACTIVE)
 	./$(TARGET_INTERACTIVE) --solver ./mask.dat 0.6 0.05 1.0 3000 1000 0 20.0
+
+run_mlp: $(TARGET_MLP)
+	./$(TARGET_MLP)

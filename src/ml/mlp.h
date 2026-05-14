@@ -2,6 +2,8 @@
 #define MLP_H
 
 #include <vector>
+#include <string>
+
 
 using Vector = std::vector<double>;
 using Matrix = std::vector<std::vector<double>>;
@@ -14,25 +16,30 @@ struct TrainingConfig {
 };
 
 class LinearLayer {
-public:
-	LinearLayer(int inputSize, int outputSize);
+	public:
+		LinearLayer(int inputSize, int outputSize);
 
-	Vector forward(const Vector& input);
-	Vector backward(const Vector& gradOutput, double learningRate);
+		Vector forward(const Vector& input);
+		Vector backward(const Vector& gradOutput, double learningRate);
 
-	int getInputSize() const;
-	int getOutputSize() const;
+		int getInputSize() const;
+		int getOutputSize() const;
 
+		const Matrix& getWeights() const;
+		const Vector& getBiases() const;
 
-private:
-	int inputSize_;
-	int outputSize_;
+		void setWeights(const Matrix& weights);
+		void setBiases(const Vector& biases);
 
-	Matrix weights_;
-	Vector biases_;
+	private:
+		int inputSize_;
+		int outputSize_;
 
-	Vector lastInput_;
+		Matrix weights_;
+		Vector biases_;
 
+		Vector lastInput_;
+		friend void saveModel(const MLP& model, const std::string& filePath);
 };
 
 class ReLULayer {
@@ -54,6 +61,13 @@ class MLP{
 
 		Vector predict(const Vector& input);
 
+		const LinearLayer& getLayer1() const;
+		const LinearLayer& getLayer2() const;
+		const LinearLayer& getOutputLayer() const;
+
+		LinearLayer& accessLayer1();
+		LinearLayer& accessLayer2();
+		LinearLayer& accessOutputLayer();
 
 	private:
 		LinearLayer layer1_;
@@ -62,7 +76,7 @@ class MLP{
 		ReLULayer relu2_;
 		LinearLayer outputLayer_;
 
-
+		friend void saveModel(const MLP& model, const std::string& filePath);
 };
 
 
@@ -72,7 +86,8 @@ Vector computeMSEGradient (const Vector& predictions, const Vector& target);
 double computeMAE (const Vector& predictions, const Vector& target);
 double computeRMSE (const Vector& predictions, const Vector& target);
 
-
+void saveModel(const MLP& model, const std::string& filePath);
+MLP loadModel(const std::string& filePath);
 
 
 

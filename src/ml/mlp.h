@@ -14,7 +14,7 @@ struct TrainingConfig {
 
 
 };
-
+class MLP;
 class LinearLayer {
 	public:
 		LinearLayer(int inputSize, int outputSize);

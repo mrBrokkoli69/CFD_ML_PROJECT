@@ -1,5 +1,5 @@
 #ifndef MLP_H
-#define MPL_H
+#define MLP_H
 
 #include <vector>
 

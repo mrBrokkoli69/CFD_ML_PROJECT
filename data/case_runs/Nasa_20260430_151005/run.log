@@ -1,0 +1,34 @@
+[DBG] entered solver mode
+[DBG] mask loaded
+[DBG] mask size validated
+Case name: Nasa_20260430_151005
+Case dir : data/case_runs/Nasa_20260430_151005
+Mask path: data/masks/Nasa.dat
+Mask size: 300 x 80
+tau   = 0.6
+rho0  = 1
+Umax  = 0.05
+Umean = 0.0333333
+Re    = 150
+maxSteps        = 3000
+coutInterval    = 500
+vtkInterval     = 10
+charLength      = 150
+[DBG] case header printed
+Starting LBM simulation...
+Grid: 300 x 80
+tau = 0.6, uMax = 0.05
+Step 500 avg Fx = 0.0266368, avg Fy = -0.276858
+Step 1000 avg Fx = -0.123692, avg Fy = -0.284819
+Step 1500 avg Fx = -0.158105, avg Fy = -0.27584
+Step 2000 avg Fx = -0.151944, avg Fy = -0.282192
+Step 2500 avg Fx = -0.189345, avg Fy = -0.282679
+Step 3000 avg Fx = -0.149851, avg Fy = -0.285959
+[DBG] runCase finished
+Final force: Fx = -0.149851, Fy = -0.285959
+Cd = -1.79821
+Cl = -3.4315
+Steps done = 3000
+Simulation finished!
+[DBG] summary printed
+[DBG] csv appended

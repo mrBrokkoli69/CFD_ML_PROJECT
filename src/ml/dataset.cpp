@@ -13,132 +13,131 @@
 
 namespace {
 
-std::vector<std::string> splitCsvLine(const std::string& line) {
-    std::vector<std::string> tokens;
-    std::stringstream ss(line);
-    std::string item;
+    std::vector<std::string> splitCsvLine(const std::string& line) {
+        std::vector<std::string> tokens;
+        std::stringstream ss(line);
+        std::string item;
 
-    while (std::getline(ss, item, ',')) {
-        tokens.push_back(item);
+        while (std::getline(ss, item, ',')) {
+            tokens.push_back(item);
+        }
+
+        return tokens;
     }
 
-    return tokens;
-}
+    bool isFiniteNumber(double value) {
+        return std::isfinite(value);
+    }
 
-bool isFiniteNumber(double value) {
-    return std::isfinite(value);
-}
-
-double parseDoubleSafe(const std::string& text) {
-    try {
-        size_t pos = 0;
-        double value = std::stod(text, &pos);
-        if (pos != text.size()) {
+    double parseDoubleSafe(const std::string& text) {
+        try {
+            size_t pos = 0;
+            double value = std::stod(text, &pos);
+            if (pos != text.size()) {
+                return std::numeric_limits<double>::quiet_NaN();
+            }
+            return value;
+        } catch (...) {
             return std::numeric_limits<double>::quiet_NaN();
         }
-        return value;
-    } catch (...) {
-        return std::numeric_limits<double>::quiet_NaN();
     }
-}
 
-int findColumnIndex(const std::vector<std::string>& header, const std::string& name) {
-    for (int i = 0; i < static_cast<int>(header.size()); ++i) {
-        if (header[i] == name) {
-            return i;
+    int findColumnIndex(const std::vector<std::string>& header, const std::string& name) {
+        for (int i = 0; i < static_cast<int>(header.size()); ++i) {
+            if (header[i] == name) {
+                return i;
+            }
         }
+        return -1;
     }
-    return -1;
-}
 
-double getNumericField(const std::vector<std::string>& row,
-                       const std::vector<std::string>& header,
-                       const std::string& columnName) {
-    int index = findColumnIndex(header, columnName);
-    if (index < 0 || index >= static_cast<int>(row.size())) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return parseDoubleSafe(row[index]);
-}
-
-std::string getStringField(const std::vector<std::string>& row,
+    double getNumericField(const std::vector<std::string>& row,
                            const std::vector<std::string>& header,
                            const std::string& columnName) {
-    int index = findColumnIndex(header, columnName);
-    if (index < 0 || index >= static_cast<int>(row.size())) {
-        return "";
-    }
-    return row[index];
-}
-
-std::vector<double> encodeShapeType(const std::string& shapeType) {
-    std::vector<double> encoded(5, 0.0);
-
-    if (shapeType == "circle") {
-        encoded[0] = 1.0;
-    } else if (shapeType == "rectangle") {
-        encoded[1] = 1.0;
-    } else if (shapeType == "ellipse") {
-        encoded[2] = 1.0;
-    } else if (shapeType == "naca0012") {
-        encoded[3] = 1.0;
-    } else if (shapeType == "naca2412") {
-        encoded[4] = 1.0;
-    }
-
-    return encoded;
-}
-
-Sample makeSampleFromRow(const std::vector<std::string>& row,
-                         const std::vector<std::string>& header) {
-    Sample sample;
-
-    const std::string shapeType = getStringField(row, header, "shape_type");
-    const std::vector<double> shapeEncoding = encodeShapeType(shapeType);
-
-    sample.features.reserve(15);
-    sample.targets.reserve(2);
-
-    for (double value : shapeEncoding) {
-        sample.features.push_back(value);
-    }
-
-    sample.features.push_back(getNumericField(row, header, "tau"));
-    sample.features.push_back(getNumericField(row, header, "uMax"));
-    sample.features.push_back(getNumericField(row, header, "uMean"));
-    sample.features.push_back(getNumericField(row, header, "characteristic_length"));
-    sample.features.push_back(getNumericField(row, header, "reynolds"));
-    sample.features.push_back(getNumericField(row, header, "anchor_x"));
-    sample.features.push_back(getNumericField(row, header, "anchor_y"));
-    sample.features.push_back(getNumericField(row, header, "radius"));
-    sample.features.push_back(getNumericField(row, header, "rect_width"));
-    sample.features.push_back(getNumericField(row, header, "rect_height"));
-    sample.features.push_back(getNumericField(row, header, "ellipse_rx"));
-    sample.features.push_back(getNumericField(row, header, "ellipse_ry"));
-    sample.features.push_back(getNumericField(row, header, "chord"));
-    sample.features.push_back(getNumericField(row, header, "solid_fraction"));
-
-    sample.targets.push_back(getNumericField(row, header, "Cd"));
-    sample.targets.push_back(getNumericField(row, header, "Cl"));
-
-    return sample;
-}
-
-bool isValidSample(const Sample& sample) {
-    for (double value : sample.features) {
-        if (!isFiniteNumber(value)) {
-            return false;
+        int index = findColumnIndex(header, columnName);
+        if (index < 0 || index >= static_cast<int>(row.size())) {
+            return std::numeric_limits<double>::quiet_NaN();
         }
-    }
+        return parseDoubleSafe(row[index]);
+                           }
 
-    for (double value : sample.targets) {
-        if (!isFiniteNumber(value)) {
-            return false;
-        }
-    }
+                           std::string getStringField(const std::vector<std::string>& row,
+                                                      const std::vector<std::string>& header,
+                                                      const std::string& columnName) {
+                               int index = findColumnIndex(header, columnName);
+                               if (index < 0 || index >= static_cast<int>(row.size())) {
+                                   return "";
+                               }
+                               return row[index];
+                                                      }
 
-    return true;
-}
+                                                      std::vector<double> encodeShapeType(const std::string& shapeType) {
+                                                          std::vector<double> encoded(5, 0.0);
+
+                                                          if (shapeType == "circle") {
+                                                              encoded[0] = 1.0;
+                                                          } else if (shapeType == "rectangle") {
+                                                              encoded[1] = 1.0;
+                                                          } else if (shapeType == "ellipse") {
+                                                              encoded[2] = 1.0;
+                                                          } else if (shapeType == "naca0012") {
+                                                              encoded[3] = 1.0;
+                                                          } else if (shapeType == "naca2412") {
+                                                              encoded[4] = 1.0;
+                                                          }
+
+                                                          return encoded;
+                                                      }
+
+                                                      Sample makeSampleFromRow(const std::vector<std::string>& row,
+                                                                               const std::vector<std::string>& header) {
+                                                          Sample sample;
+
+                                                          const std::string shapeType = getStringField(row, header, "shape_type");
+                                                          const std::vector<double> shapeEncoding = encodeShapeType(shapeType);
+
+                                                          sample.features.reserve(19);
+                                                          sample.targets.reserve(1);
+
+                                                          for (double value : shapeEncoding) {
+                                                              sample.features.push_back(value);
+                                                          }
+
+                                                          sample.features.push_back(getNumericField(row, header, "tau"));
+                                                          sample.features.push_back(getNumericField(row, header, "uMax"));
+                                                          sample.features.push_back(getNumericField(row, header, "uMean"));
+                                                          sample.features.push_back(getNumericField(row, header, "characteristic_length"));
+                                                          sample.features.push_back(getNumericField(row, header, "reynolds"));
+                                                          sample.features.push_back(getNumericField(row, header, "anchor_x"));
+                                                          sample.features.push_back(getNumericField(row, header, "anchor_y"));
+                                                          sample.features.push_back(getNumericField(row, header, "radius"));
+                                                          sample.features.push_back(getNumericField(row, header, "rect_width"));
+                                                          sample.features.push_back(getNumericField(row, header, "rect_height"));
+                                                          sample.features.push_back(getNumericField(row, header, "ellipse_rx"));
+                                                          sample.features.push_back(getNumericField(row, header, "ellipse_ry"));
+                                                          sample.features.push_back(getNumericField(row, header, "chord"));
+                                                          sample.features.push_back(getNumericField(row, header, "solid_fraction"));
+
+                                                          sample.targets.push_back(getNumericField(row, header, "Cd"));
+
+                                                          return sample;
+                                                                               }
+
+                                                                               bool isValidSample(const Sample& sample) {
+                                                                                   for (double value : sample.features) {
+                                                                                       if (!isFiniteNumber(value)) {
+                                                                                           return false;
+                                                                                       }
+                                                                                   }
+
+                                                                                   for (double value : sample.targets) {
+                                                                                       if (!isFiniteNumber(value)) {
+                                                                                           return false;
+                                                                                       }
+                                                                                   }
+
+                                                                                   return true;
+                                                                               }
 
 } // namespace
 
@@ -179,8 +178,7 @@ Dataset loadDatasetFromCsv(const std::string& csvPath) {
     };
 
     dataset.targetNames = {
-        "Cd",
-        "Cl"
+        "Cd"
     };
 
     std::string line;
@@ -298,16 +296,16 @@ void applyNormalization(Dataset& dataset, const NormalizationStats& stats) {
     if (static_cast<int>(stats.featuresMeans.size()) != featureCount ||
         static_cast<int>(stats.featureStds.size()) != featureCount) {
         throw std::runtime_error("Normalization stats size does not match dataset feature size");
-    }
-
-    for (Sample& sample : dataset.samples) {
-        if (static_cast<int>(sample.features.size()) != featureCount) {
-            throw std::runtime_error("Inconsistent feature size in dataset");
         }
 
-        for (int j = 0; j < featureCount; ++j) {
-            sample.features[j] =
+        for (Sample& sample : dataset.samples) {
+            if (static_cast<int>(sample.features.size()) != featureCount) {
+                throw std::runtime_error("Inconsistent feature size in dataset");
+            }
+
+            for (int j = 0; j < featureCount; ++j) {
+                sample.features[j] =
                 (sample.features[j] - stats.featuresMeans[j]) / stats.featureStds[j];
+            }
         }
-    }
 }

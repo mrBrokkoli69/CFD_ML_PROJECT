@@ -1,0 +1,48 @@
+[DBG] entered solver mode
+[DBG] mask loaded
+[DBG] mask size validated
+Case name: circle_predicter(11.167)_20260514_170645
+Case dir : data/case_runs/circle_predicter(11.167)_20260514_170645
+Mask path: data/masks/circle_predicter(11.167).dat
+Mask size: 300 x 80
+tau   = 0.6
+rho0  = 1
+Umax  = 0.05
+Umean = 0.0333333
+Re    = 20
+maxSteps        = 2000
+coutInterval    = 100
+vtkInterval     = 0
+charLength      = 20
+[DBG] case header printed
+Starting LBM simulation...
+Grid: 300 x 80
+tau = 0.6, uMax = 0.05
+Step 100 avg Fx = 1.253, avg Fy = -0.0296779
+Step 200 avg Fx = 1.03039, avg Fy = -0.131754
+Step 300 avg Fx = 0.550981, avg Fy = -0.0446189
+Step 400 avg Fx = 0.217865, avg Fy = -0.129455
+Step 500 avg Fx = 0.0742279, avg Fy = -0.171921
+Step 600 avg Fx = 0.0905639, avg Fy = -0.14904
+Step 700 avg Fx = 0.157712, avg Fy = -0.115033
+Step 800 avg Fx = 0.227879, avg Fy = -0.162813
+Step 900 avg Fx = -0.0333001, avg Fy = -0.190189
+Step 1000 avg Fx = 0.347419, avg Fy = -0.032832
+Step 1100 avg Fx = 0.769791, avg Fy = -0.136049
+Step 1200 avg Fx = 0.41809, avg Fy = -0.234459
+Step 1300 avg Fx = 0.0488309, avg Fy = -0.131085
+Step 1400 avg Fx = -0.0161831, avg Fy = -0.0701342
+Step 1500 avg Fx = 0.128558, avg Fy = -0.158648
+Step 1600 avg Fx = 0.314105, avg Fy = -0.0939609
+Step 1700 avg Fx = 0.416751, avg Fy = -0.0579638
+Step 1800 avg Fx = 0.309845, avg Fy = -0.126916
+Step 1900 avg Fx = 0.182114, avg Fy = -0.13864
+Step 2000 avg Fx = 0.35562, avg Fy = -0.0264397
+[DBG] runCase finished
+Final force: Fx = 0.35562, Fy = -0.0264397
+Cd = 32.0058
+Cl = -2.37958
+Steps done = 2000
+Simulation finished!
+[DBG] summary printed
+[DBG] csv appended

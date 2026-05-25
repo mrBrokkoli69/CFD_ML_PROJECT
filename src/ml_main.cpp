@@ -1,5 +1,6 @@
 #include "ml/dataset.h"
 #include "ml/mlp.h"
+#include "ml/normalization_io.h"
 
 #include <algorithm>
 #include <iostream>
@@ -43,6 +44,8 @@ int main() {
 
 		MLP model(inputSize, 16, 8, outputSize);
 		const std::string modelPath = "./data/ml/cd_model.txt";
+		const std::string normPath = "./data/ml/cd_norm.txt";
+
 		std::mt19937 trainRng(2040);
 
 		for (int epoch = 0; epoch < config.epochs; ++epoch) {
@@ -105,6 +108,10 @@ int main() {
 
 		saveModel(model, modelPath);
 		std::cout << "Model saved to: " << modelPath << std::endl;
+		
+		saveNormalizationStats(stats, normPath);
+		std::cout << "Normalization stats saved to: " << normPath << std::endl;
+
 
 		return 0;
 	} catch (const std::exception& e) {

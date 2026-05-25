@@ -29,7 +29,7 @@ COMMON_SOLVER_SRCS = \
 	$(SRCDIR_EDITOR)/mask_loader.cpp
 
 # -------------------------
-# Файлы interactive app
+# Interactive app
 # -------------------------
 INTERACTIVE_EDITOR_SRCS = \
 	$(SRCDIR_EDITOR)/editor.cpp \
@@ -41,7 +41,12 @@ INTERACTIVE_APP_SRCS = \
 	$(SRCDIR_APPS)/interactive_main.cpp \
 	$(SRCDIR_APPS)/main_lbm.cpp \
 	$(INTERACTIVE_EDITOR_SRCS) \
-	$(COMMON_SOLVER_SRCS)
+	$(COMMON_SOLVER_SRCS) \
+	$(SRCDIR_ML)/mlp.cpp \
+	$(SRCDIR_ML)/feature_extractor.cpp \
+	$(SRCDIR_ML)/normalization_io.cpp \
+	$(SRCDIR_ML)/inference_session.cpp \
+	$(SRCDIR_ML)/predict_cd.cpp
 
 INTERACTIVE_APP_OBJS = $(INTERACTIVE_APP_SRCS:.cpp=.o)
 
@@ -71,6 +76,8 @@ DATASET_APP_OBJS = $(DATASET_APP_SRCS:.cpp=.o)
 MLP_APP_SRCS = \
 	$(SRCDIR_ML)/dataset.cpp \
 	$(SRCDIR_ML)/mlp.cpp \
+	$(SRCDIR_ML)/feature_extractor.cpp \
+	$(SRCDIR_ML)/normalization_io.cpp \
 	$(SRCDIR_APPS)/ml_main.cpp
 
 MLP_APP_OBJS = $(MLP_APP_SRCS:.cpp=.o)
@@ -125,3 +132,9 @@ run_solver_example: $(TARGET_INTERACTIVE)
 
 run_mlp: $(TARGET_MLP)
 	./$(TARGET_MLP)
+
+run_validation: $(TARGET_VALIDATION)
+	./$(TARGET_VALIDATION)
+
+run_dataset: $(TARGET_DATASET)
+	./$(TARGET_DATASET)

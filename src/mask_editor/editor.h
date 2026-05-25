@@ -31,6 +31,8 @@ struct EditorMask {
 
 void drawMask(const EditorMask& mask, int cursorY, int cursorX);
 int inputInt(const char* prompt);
-int runEditorApp();
+#include "../ml/inference_session.h"
+
+int runEditorApp(InferenceSession& inferenceSession, bool mlAvailable);
 
 #endif

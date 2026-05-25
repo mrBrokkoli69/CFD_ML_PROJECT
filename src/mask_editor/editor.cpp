@@ -2,11 +2,13 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "editor.h"
 #include "shape_generator.h"
 #include "flood_fill.h"
 #include "file_io.h"
+#include "../ml/predict_cd.h"
 
 struct RunParams {
     double tau = 0.6;
@@ -16,6 +18,21 @@ struct RunParams {
     int coutInterval = 1000;
     int vtkInterval = 0;
     double characteristicLength = 20.0;
+};
+
+struct ShapeParams {
+    bool isValid = false;
+    std::string shapeType = "circle";
+
+    double anchorX = 0.0;
+    double anchorY = 0.0;
+
+    double radius = 0.0;
+    double rectWidth = 0.0;
+    double rectHeight = 0.0;
+    double ellipseRx = 0.0;
+    double ellipseRy = 0.0;
+    double chord = 0.0;
 };
 
 void drawMask(const EditorMask& mask, int cursorY, int cursorX) {
@@ -30,7 +47,6 @@ void drawMask(const EditorMask& mask, int cursorY, int cursorX) {
     }
 
     mvaddch(cursorY + 1, cursorX + 1, 'X');
-    refresh();
 }
 
 int inputInt(const char* prompt) {
@@ -150,8 +166,12 @@ RunParams inputRunParams(const EditorMask& mask) {
     return params;
 }
 
-int runEditorApp() {
+int runEditorApp(InferenceSession& inferenceSession, bool mlAvailable) {
     EditorMask mask;
+
+    double lastPredictedCd = 0.0;
+    bool hasPredictedCd = false;
+    ShapeParams shapeParams;
 
     initscr();
     mouseinterval(0);
@@ -165,6 +185,7 @@ int runEditorApp() {
 
     int ch;
     while (true) {
+        clear();
         drawMask(mask, cursorY, cursorX);
 
         move(mask.HEIGHT + 2, 0);
@@ -177,7 +198,30 @@ int runEditorApp() {
 
         move(mask.HEIGHT + 4, 0);
         clrtoeol();
-        printw("f - flood fill | c - clear all | p - save mask | l - load mask | r - run solver | x - delete mask | C - draw Circle | R - draw Rectangle | E - draw Ellipse | N - draw NASA form");
+        printw("f - flood fill | c - clear all | p - save mask | l - load mask | r - run solver | m - predict Cd | x - delete mask | C - draw Circle | R - draw Rectangle | E - draw Ellipse | N - draw NASA form");
+
+        move(mask.HEIGHT + 20, 0);
+        clrtoeol();
+        if (mlAvailable) {
+            printw("[M] Predict Cd is available");
+        } else {
+            printw("[M] Predict Cd unavailable (model not loaded)");
+        }
+
+        move(mask.HEIGHT + 21, 0);
+        clrtoeol();
+        if (shapeParams.isValid) {
+            printw("Current parametric shape: %s", shapeParams.shapeType.c_str());
+        } else {
+            printw("Current shape state: manual/unknown (ML disabled for arbitrary masks)");
+        }
+
+        move(mask.HEIGHT + 22, 0);
+        clrtoeol();
+        if (hasPredictedCd) {
+            printw("Predicted Cd = %.6f", lastPredictedCd);
+        }
+
         refresh();
 
         ch = getch();
@@ -208,6 +252,8 @@ int runEditorApp() {
 
             case ' ':
                 mask.setSolid(cursorY, cursorX, !mask.isSolid(cursorY, cursorX));
+                shapeParams.isValid = false;
+                hasPredictedCd = false;
                 break;
 
             case 'C': {
@@ -215,6 +261,18 @@ int runEditorApp() {
                 int cy = inputInt("Circle center Y");
                 int r = inputInt("Circle radius");
                 drawCircle(mask, cx, cy, r);
+
+                shapeParams.isValid = true;
+                shapeParams.shapeType = "circle";
+                shapeParams.anchorX = cx;
+                shapeParams.anchorY = cy;
+                shapeParams.radius = r;
+                shapeParams.rectWidth = 0.0;
+                shapeParams.rectHeight = 0.0;
+                shapeParams.ellipseRx = 0.0;
+                shapeParams.ellipseRy = 0.0;
+                shapeParams.chord = 0.0;
+                hasPredictedCd = false;
                 break;
             }
 
@@ -231,8 +289,12 @@ int runEditorApp() {
 
                         if (event.bstate & (BUTTON1_CLICKED | BUTTON1_PRESSED)) {
                             mask.setSolid(cursorY, cursorX, true);
+                            shapeParams.isValid = false;
+                            hasPredictedCd = false;
                         } else if (event.bstate & (BUTTON3_CLICKED | BUTTON3_PRESSED)) {
                             mask.setSolid(cursorY, cursorX, false);
+                            shapeParams.isValid = false;
+                            hasPredictedCd = false;
                         }
                     }
                 }
@@ -243,11 +305,15 @@ int runEditorApp() {
                 bool targetValue = mask.isSolid(cursorY, cursorX);
                 bool newValue = !targetValue;
                 floodFill(mask, cursorY, cursorX, targetValue, newValue);
+                shapeParams.isValid = false;
+                hasPredictedCd = false;
                 break;
             }
 
             case 'c':
                 clearMask(mask);
+                shapeParams.isValid = false;
+                hasPredictedCd = false;
                 break;
 
             case 'p': {
@@ -277,6 +343,9 @@ int runEditorApp() {
 
                 std::string fullPath = buildMaskPath(selectedName);
                 loadMask(mask, fullPath);
+
+                shapeParams.isValid = false;
+                hasPredictedCd = false;
 
                 clearMessageArea(mask);
                 mvprintw(mask.HEIGHT + 5, 0, "Loaded: %s", selectedName.c_str());
@@ -346,6 +415,18 @@ int runEditorApp() {
                 int x2 = inputInt("Rectangle x2");
                 int y2 = inputInt("Rectangle y2");
                 drawRectangle(mask, x1, y1, x2, y2);
+
+                shapeParams.isValid = true;
+                shapeParams.shapeType = "rectangle";
+                shapeParams.anchorX = 0.5 * (x1 + x2);
+                shapeParams.anchorY = 0.5 * (y1 + y2);
+                shapeParams.radius = 0.0;
+                shapeParams.rectWidth = std::abs(x2 - x1);
+                shapeParams.rectHeight = std::abs(y2 - y1);
+                shapeParams.ellipseRx = 0.0;
+                shapeParams.ellipseRy = 0.0;
+                shapeParams.chord = 0.0;
+                hasPredictedCd = false;
                 break;
             }
 
@@ -355,6 +436,18 @@ int runEditorApp() {
                 int rx = inputInt("Ellipse radius X");
                 int ry = inputInt("Ellipse radius Y");
                 drawEllipse(mask, cx, cy, rx, ry);
+
+                shapeParams.isValid = true;
+                shapeParams.shapeType = "ellipse";
+                shapeParams.anchorX = cx;
+                shapeParams.anchorY = cy;
+                shapeParams.radius = 0.0;
+                shapeParams.rectWidth = 0.0;
+                shapeParams.rectHeight = 0.0;
+                shapeParams.ellipseRx = rx;
+                shapeParams.ellipseRy = ry;
+                shapeParams.chord = 0.0;
+                hasPredictedCd = false;
                 break;
             }
 
@@ -366,11 +459,100 @@ int runEditorApp() {
 
                 if (digits == 12) {
                     drawNACA0012(mask, cx, cy, chord);
+
+                    shapeParams.isValid = true;
+                    shapeParams.shapeType = "naca0012";
+                    shapeParams.anchorX = cx;
+                    shapeParams.anchorY = cy;
+                    shapeParams.radius = 0.0;
+                    shapeParams.rectWidth = 0.0;
+                    shapeParams.rectHeight = 0.0;
+                    shapeParams.ellipseRx = 0.0;
+                    shapeParams.ellipseRy = 0.0;
+                    shapeParams.chord = chord;
+                    hasPredictedCd = false;
                 } else if (digits == 2412) {
                     drawNACA2412(mask, cx, cy, chord);
+
+                    shapeParams.isValid = true;
+                    shapeParams.shapeType = "naca2412";
+                    shapeParams.anchorX = cx;
+                    shapeParams.anchorY = cy;
+                    shapeParams.radius = 0.0;
+                    shapeParams.rectWidth = 0.0;
+                    shapeParams.rectHeight = 0.0;
+                    shapeParams.ellipseRx = 0.0;
+                    shapeParams.ellipseRy = 0.0;
+                    shapeParams.chord = chord;
+                    hasPredictedCd = false;
                 } else {
                     mvprintw(LINES - 3, 0, "Unknown NACA profile: %d", digits);
                     getch();
+                }
+                break;
+            }
+
+            case 'm':
+            case 'M': {
+                clearMessageArea(mask);
+
+                if (!mlAvailable) {
+                    hasPredictedCd = false;
+                    mvprintw(mask.HEIGHT + 5, 0, "ML model is not loaded");
+                    break;
+                }
+
+                if (!shapeParams.isValid) {
+                    hasPredictedCd = false;
+                    mvprintw(mask.HEIGHT + 5, 0, "No parameterized shape selected");
+                    break;
+                }
+
+                RunParams params = inputRunParams(mask);
+
+                double uMean = (2.0 / 3.0) * params.uMax;
+                double nu = (params.tau - 0.5) / 3.0;
+                double reynolds = 0.0;
+                if (nu > 1e-12) {
+                    reynolds = (uMean * params.characteristicLength) / nu;
+                }
+
+                int solidCount = 0;
+                for (int y = 0; y < mask.HEIGHT; ++y) {
+                    for (int x = 0; x < mask.WIDTH; ++x) {
+                        if (mask.isSolid(y, x)) {
+                            solidCount++;
+                        }
+                    }
+                }
+
+                double solidFraction = static_cast<double>(solidCount) /
+                                       static_cast<double>(mask.WIDTH * mask.HEIGHT);
+
+                try {
+                    lastPredictedCd = predictCd(
+                        inferenceSession,
+                        shapeParams.shapeType,
+                        params.tau,
+                        params.uMax,
+                        uMean,
+                        params.characteristicLength,
+                        reynolds,
+                        shapeParams.anchorX,
+                        shapeParams.anchorY,
+                        shapeParams.radius,
+                        shapeParams.rectWidth,
+                        shapeParams.rectHeight,
+                        shapeParams.ellipseRx,
+                        shapeParams.ellipseRy,
+                        shapeParams.chord,
+                        solidFraction
+                    );
+                    hasPredictedCd = true;
+                    mvprintw(mask.HEIGHT + 5, 0, "Predicted Cd = %.6f", lastPredictedCd);
+                } catch (...) {
+                    hasPredictedCd = false;
+                    mvprintw(mask.HEIGHT + 5, 0, "ML prediction failed");
                 }
                 break;
             }
